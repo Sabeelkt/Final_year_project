@@ -1,123 +1,94 @@
-import React, { useState } from 'react';
-import { Bell, Plus, Users, Calendar, BarChart } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import React from "react";
+import { FiSearch, FiPlus } from "react-icons/fi";
+import { Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-function Dashboard() {
-  const { user } = useAuth();
-  const [activeEvents, setActiveEvents] = useState([
-    {
-      id: 1,
-      title: 'SketchUp Workshop',
-      registrations: 45,
-      attendance: 38,
-      date: '28 Jan 2024',
-      status: 'active'
-    },
-    {
-      id: 2,
-      title: 'Tink-Her-Hack 3.0',
-      registrations: 120,
-      attendance: 98,
-      date: '22 Jan 2024',
-      status: 'completed'
-    }
-  ]);
+const events = [
+  {
+    title: "Connect Bootcamp",
+    date: "23 Nov 2024",
+    description: "A bootcamp series organized for new Connect interns.",
+  },
+  {
+    title: "Treasure Hunt",
+    date: "26 Dec 2024",
+    description: "Elegant treasure hunt organized by XYZ Club.",
+  },
+  {
+    title: "TH!NK-HER-HACK 3.0",
+    date: "10 Jan 2025",
+    description: "A girls-only hackathon event powered by TechLadies.",
+  },
+  {
+    title: "Hack the Idea",
+    date: "15 Feb 2025",
+    description: "Learn, plan, and kick-start a creative workshop on thinking.",
+  },
+];
 
+const EventList = () => {
+  const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white p-4 shadow-sm">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img
-              src={user?.profileImage || 'https://ui-avatars.com/api/?name=' + user?.name}
-              alt="Profile"
-              className="w-8 h-8 rounded-full"
-            />
-            <span className="text-gray-700">{user?.name}</span>
-          </div>
-          <Bell className="w-6 h-6 text-gray-600" />
-        </div>
+    <div className="min-h-screen bg-gray-100 p-4">
+      {/* Header */}
+      <header className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-green-600">Mark It</h1>
       </header>
 
-      <main className="max-w-5xl mx-auto p-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-            <Plus className="w-5 h-5" />
-            Create Event
-          </button>
-        </div>
+      {/* Search Bar */}
+      <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
+        <FiSearch className="text-gray-400 ml-2" />
+        <input
+          type="text"
+          placeholder="Search events..."
+          className="flex-grow p-2 outline-none"
+        />
+        <button
+          className="bg-green-500 text-white p-2 rounded-lg ml-2"
+          onClick={() => navigate("/organizer/create-event")}
+        >
+          <FiPlus />
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Calendar className="w-6 h-6 text-blue-600" />
+      {/* Event List */}
+      <div className="mt-4 grid gap-4">
+        {events.map((event, index) => (
+          <div
+            key={index}
+            className="bg-green-50 p-4 rounded-lg shadow-md flex flex-col gap-2"
+          >
+            {/* Event Title & Date */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold">{event.title}</h2>
+                <p className="text-gray-600 text-sm">Date: {event.date}</p>
               </div>
-              <h3 className="font-semibold">Active Events</h3>
+              <button
+                className="bg-white text-green-600 border border-green-600 px-3 py-1 text-sm rounded-md shadow-sm hover:bg-green-100"
+                onClick={() => navigate(`/organizer/events/${index}`)}
+              >
+                View details
+              </button>
             </div>
-            <p className="text-3xl font-bold">3</p>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="bg-green-100 p-3 rounded-full">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold">Total Participants</h3>
+            {/* Event Description */}
+            <p className="text-gray-700 text-sm">{event.description}</p>
+
+            {/* Edit Icon */}
+            <div className="flex justify-end">
+              <button
+                className="text-green-600 hover:text-green-800"
+                onClick={() => navigate(`/organizer/edit-event/${index}`)}
+              >
+                <Pencil size={20} />
+              </button>
             </div>
-            <p className="text-3xl font-bold">165</p>
           </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="bg-purple-100 p-3 rounded-full">
-                <BarChart className="w-6 h-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold">Avg. Attendance</h3>
-            </div>
-            <p className="text-3xl font-bold">82%</p>
-          </div>
-        </div>
-
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Recent Events</h2>
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrations</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {activeEvents.map(event => (
-                  <tr key={event.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{event.title}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">{event.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">{event.registrations}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">{event.attendance}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        event.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {event.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </main>
+        ))}
+      </div>
     </div>
   );
-}
+};
 
-export default Dashboard;
+export default EventList;

@@ -7,8 +7,8 @@ import calendarIllustration from '../asset/loginlogo.png';
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: 'jane@organizer.com',
+    password: 'organizer456'
   });
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -21,7 +21,7 @@ function LoginPage() {
     try {
       await login(formData);
       // On successful login, navigate to the dashboard or home page
-      navigate('/student'); // adjust the route as needed
+      // navigate('/student'); // adjust the route as needed
     } catch (error) {
       // Display error message
       setError(error.response?.data?.message || 'Login failed. Please check your credentials.');

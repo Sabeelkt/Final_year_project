@@ -10,6 +10,10 @@ import EventDetails from './pages/EventDetails';
 import { AuthProvider } from './context/AuthContext';
 import Registeration from './pages/student/Register'
 import PreviousEvent from './pages/student/PreviousEvent'
+import CreateEvent from './pages/organizer/CreateEvent';
+import EventDetail from './pages/organizer/EventDetail';
+import EventReport from './pages/organizer/EventReport';
+import EventRequest from './pages/organizer/EventRequest';
 
 function App() {
   return (
@@ -20,11 +24,16 @@ function App() {
           <Route path="/" element={<SplashScreen />} />
           <Route path="/login" element={<Login />} />
           <Route path="/student/*" element={<StudentDashboard />} />
-          <Route path="/organizer/*" element={<OrganizerDashboard />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
           <Route path="/event/:id" element={<EventDetails />} />
           <Route path="/student/register" element={<Registeration />} />
           <Route path="/student/previous-event" element={<PreviousEvent />} />
+          <Route path="/organizer/*" element={<OrganizerDashboard />} />
+          <Route path="/organizer/create-event" element={<CreateEvent />} />
+          <Route path="/organizer/events/*" element={<EventDetail />} />
+          <Route path="/organizer/event/report" element={<EventReport />} />
+          <Route path="/orgaziner/eventrequest" element={<EventRequest />} />
+
         </Routes>
       </AuthProvider>
     </Router>

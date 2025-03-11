@@ -129,8 +129,7 @@ const EventCard = ({ title, description, date, location }) => {
 
 // ✅ Recent Event Card Component
 const RecentEventCard = ({ image, title, description, date, location }) => {
-  const navigate 
-  git push --set-upstream origin Master= useNavigate(); // ✅ Add this line inside the component
+  const navigate = useNavigate(); // ✅ Add this line inside the component
 
   return (
     <div
