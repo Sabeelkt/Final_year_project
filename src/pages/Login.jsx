@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import calendarIllustration from '../asset/loginlogo.png';
+import {auth} from '@/config/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +21,9 @@ function LoginPage() {
     setError('');
     
     try {
-      await login(formData);
+      // await login(formData);
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      navigate('/organizer');
       // On successful login, navigate to the dashboard or home page
       // navigate('/student'); // adjust the route as needed
     } catch (error) {

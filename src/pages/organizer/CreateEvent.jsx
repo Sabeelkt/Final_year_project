@@ -3,9 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Upload } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { db } from "@/config/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function CreateEvent() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [eventData, setEventData] = useState({
     name: "",
     date: null,
@@ -16,16 +20,46 @@ export default function CreateEvent() {
     poster: null,
   });
 
+  // Handle File Upload
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setEventData({ ...eventData, poster: file });
   };
 
-  const handleSubmit = (e) => {
+  // Handle Form Submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", eventData);
-    alert("Event Created Successfully!");
-    navigate("/events");
+    setLoading(true);
+
+    try {
+      let posterURL = "now nthng";
+
+      // Upload poster to Firebase Storage if selected
+      // if (eventData.poster) {
+      //   const posterRef = ref(storage, `eventPosters/${eventData.poster.name}`);
+      //   await uploadBytes(posterRef, eventData.poster);
+      //   posterURL = await getDownloadURL(posterRef);
+      // }
+
+      // Store event data in Firestore
+      await addDoc(collection(db, "events"), {
+        name: eventData.name,
+        date: eventData.date?.toISOString() || null,
+        time: eventData.time,
+        venue: eventData.venue,
+        description: eventData.description,
+        participantLimit: eventData.participantLimit,
+        posterURL: posterURL,
+      });
+
+      alert("Event Created Successfully!");
+      navigate("/events");
+    } catch (error) {
+      console.error("Error adding event:", error);
+      alert("Failed to create event.");
+    }
+
+    setLoading(false);
   };
 
   return (

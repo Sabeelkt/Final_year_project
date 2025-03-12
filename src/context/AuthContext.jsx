@@ -1,102 +1,49 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+// src/context/AuthContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@/config/firebase'; 
 
-const AuthContext = createContext(null);
-
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Mark Johnson',
-    email: 'mark@gmail.com',
-    role: 'student',
-    password: 'password123'
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@organizer.com',
-    role: 'organizer',
-    password: 'organizer456'
-  }
-];
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      verifyToken(token);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const verifyToken = async (token) => {
-    try {
-      const storedUser = JSON.parse(localStorage.getItem('user'));
-      if (storedUser) {
-        setUser(storedUser);
-      } else {
-        throw new Error('Invalid token');
-      }
-    } catch (error) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (credentials) => {
-    try {
-      const foundUser = mockUsers.find(
-        (u) => u.email === credentials.email && u.password === credentials.password
-      );
-
-      if (foundUser) {
-        const mockToken = 'mock-jwt-token';
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('user', JSON.stringify(foundUser));
-        setUser(foundUser);
-        toast.success('Login successful!');
-
-        switch (foundUser.role) {
-          case 'student':
-            navigate('/student');
-            break;
-          case 'organizer':
-            navigate('/organizer');
-            break;
-          case 'admin':
-            navigate('/admin');
-            break;
-          default:
-            navigate('/');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        try {
+          const idTokenResult = await user.getIdTokenResult();
+          setRole(idTokenResult.claims.role || ''); // Default to empty string if no role
+        } catch (error) {
+          console.error("Error getting user role:", error);
         }
       } else {
-        throw new Error('Invalid credentials');
+        setUser(null);
+        setRole(null);
       }
-    } catch (error) {
-      toast.error('Invalid email or password');
-      throw error;
-    }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut(auth);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    toast.success('Logged out successfully');
-    navigate('/login');
-  };
+  if (loading) {
+    return (
+      <div className='fixed top-0 left-0 w-full h-full bg-slate-900 flex items-center justify-center z-50'>
+        <p className='text-center text-white flex items-center justify-center'>Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, role, handleSignOut }}>
       {children}
     </AuthContext.Provider>
   );

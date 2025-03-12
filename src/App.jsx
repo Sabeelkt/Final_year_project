@@ -5,7 +5,7 @@ import SplashScreen from './pages/SplashScreen';
 import Login from './pages/Login';
 import StudentDashboard from './pages/student/Home';
 import OrganizerDashboard from './pages/organizer/Dashboard';
-import AdminDashboard from './pages/admin/Dashboard';
+import AdminDashboard from './pages/admin/Dashboard/Dashboard';
 import EventDetails from './pages/EventDetails';
 import { AuthProvider } from './context/AuthContext';
 import Registeration from './pages/student/Register'
