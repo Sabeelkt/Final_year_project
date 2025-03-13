@@ -14,7 +14,7 @@ import CreateEvent from './pages/organizer/CreateEvent';
 import EventDetail from './pages/organizer/EventDetail';
 import EventReport from './pages/organizer/EventReport';
 import EventRequest from './pages/organizer/EventRequest';
-
+import AccRegister from './pages/AccRegister';
 function App() {
   return (
     <Router>
@@ -23,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<SplashScreen />} />
           <Route path="/login" element={<Login />} />
+          <Route path='/AccRegister' element={<AccRegister />} />
           <Route path="/student/*" element={<StudentDashboard />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
           <Route path="/event/:id" element={<EventDetails />} />

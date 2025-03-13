@@ -1,216 +1,231 @@
-import React, { useEffect, useState } from "react";
-// import { db } from "@/config/firebase";
-// import {
-//   collection,
-//   getDocs,
-//   addDoc,
-//   doc,
-//   Timestamp,
-//   deleteDoc,
-// } from "firebase/firestore";
-import { AiFillDelete, AiFillEye } from "react-icons/ai";
-import { Button } from '../../../components/ui/button';
-import { LuPlus } from "react-icons/lu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Home, Users, GraduationCap, User, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '../../../components/ui/form';
-import { ImSpinner6 } from "react-icons/im";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../../../components/ui/alert-dialog";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { collection,getDocs  } from "firebase/firestore";
-import { db } from '@/config/firebase'
-const formSchema2 = z.object({
-  department: z.string().nonempty("Department is required"),
-});
+import { Label } from "@/components/ui/label";
+import NavBar from "../../../components/NavBar";
 
-const Dashboard = () => {
+const AdminDashboard = () => {
   const [departments, setDepartments] = useState([]);
-  const [showDepartmentModal, setShowDepartmentModal] = useState(false);
-  const departmentCollectionRef = collection(db, "departments");
-  const [isLoading, setIsLoading] = useState({ fetch: true, submit: false, delete: false });
-  const [parent] = useAutoAnimate();
-  
-  const DepartmentForm = useForm({
-    resolver: zodResolver(formSchema2),
-    defaultValues: { department: "" },
-  });
-
-  const fetchDepartments = async () => {
-    try {
-      const departmentSnapshot = await getDocs(departmentCollectionRef);
-      const departments = departmentSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      departments.sort((a, b) => a.department.localeCompare(b.department));
-      setDepartments(departments);
-      setIsLoading((prev) => ({ ...prev, fetch: false }));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const addDepartment = async (values) => {
-    setIsLoading((prev) => ({ ...prev, submit: true }));
-    try {
-      const data = { department: values.department, createdAt: Timestamp.now() };
-      await addDoc(departmentCollectionRef, data);
-      fetchDepartments();
-      setShowDepartmentModal(false);
-      DepartmentForm.reset();
-    } catch (error) {
-      console.error(error);
-    }
-    setIsLoading((prev) => ({ ...prev, submit: false }));
-  };
-
-  const deleteDepartment = async (id) => {
-    setIsLoading((prev) => ({ ...prev, delete: true }));
-    try {
-      await deleteDoc(doc(db, "departments", id));
-      fetchDepartments();
-    } catch (error) {
-      console.error(error);
-    }
-    setIsLoading((prev) => ({ ...prev, delete: false }));
-  };
+  const [isAddDepartmentOpen, setIsAddDepartmentOpen] = useState(false);
+  const [newDepartment, setNewDepartment] = useState("");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
-    fetchDepartments();
+    // Load departments from localStorage
+    const storedDepartments = JSON.parse(localStorage.getItem("departments") || "[]");
+    if (storedDepartments.length === 0) {
+      // Initialize with sample departments if none exist
+      const initialDepartments = [
+        { id: "dept_1", name: "B com Co operation" },
+        { id: "dept_2", name: "BA English" },
+        { id: "dept_3", name: "BA History" },
+        { id: "dept_4", name: "BA West Asia" },
+        { id: "dept_5", name: "Bcom Co operation" },
+        { id: "dept_6", name: "Bsc Biotechnolog" },
+      ];
+      localStorage.setItem("departments", JSON.stringify(initialDepartments));
+      setDepartments(initialDepartments);
+    } else {
+      setDepartments(storedDepartments);
+    }
   }, []);
 
+  const handleAddDepartment = () => {
+    if (!newDepartment.trim()) {
+      toast.error("Department name cannot be empty");
+      return;
+    }
+
+    const departmentExists = departments.some(
+      (dept) => dept.name.toLowerCase() === newDepartment.toLowerCase()
+    );
+
+    if (departmentExists) {
+      toast.error("Department already exists");
+      return;
+    }
+
+    const newDepartmentObject = {
+      id: `dept_${Date.now()}`,
+      name: newDepartment,
+    };
+
+    const updatedDepartments = [...departments, newDepartmentObject];
+    localStorage.setItem("departments", JSON.stringify(updatedDepartments));
+    setDepartments(updatedDepartments);
+    setNewDepartment("");
+    setIsAddDepartmentOpen(false);
+    toast.success("Department added successfully");
+  };
+
+  const handleDeleteDepartment = (id) => {
+    const updatedDepartments = departments.filter((dept) => dept.id !== id);
+    localStorage.setItem("departments", JSON.stringify(updatedDepartments));
+    setDepartments(updatedDepartments);
+    toast.success("Department deleted successfully");
+  };
+
   return (
-    <div className="mx-auto mb-10 mt-20 flex h-full max-w-[600px] flex-col items-center gap-10">
-      {isLoading.delete && (
-        <div className="fixed left-0 top-0 z-50 flex h-full w-full items-center justify-center bg-black/50">
-          <div className="flex flex-col gap-4 rounded-lg bg-white p-4 shadow-md">
-            <div className="flex items-center justify-center gap-4">
-              <ImSpinner6 className="h-6 w-6 animate-spin text-emerald-600" />
-              <h1 className="font-bold text-emerald-600">Deleting Department...</h1>
+    <div className="min-h-screen bg-[#0c1221] text-white">
+      <NavBar />
+      
+      <main className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Navigation Tabs */}
+        <div className="flex justify-center mb-12 mt-8">
+          <div className="bg-[#102336] rounded-lg p-1 flex space-x-2">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
+                activeTab === "dashboard" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
+              }`}
+            >
+              <Home size={18} />
+              <span>Dashboard</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
+                activeTab === "users" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
+              }`}
+            >
+              <Users size={18} />
+              <span>Users</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("students")}
+              className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
+                activeTab === "students" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
+              }`}
+            >
+              <GraduationCap size={18} />
+              <span>Students</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
+                activeTab === "requests" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
+              }`}
+            >
+              <User size={18} />
+              <span>Account Request</span>
+            </button>
+          </div>
+        </div>
+
+        <h1 className="text-4xl font-bold text-center mb-14 text-[#00E5B7]">Admin Dashboard</h1>
+        
+        {activeTab === "dashboard" && (
+          <>
+            {/* Add Department Button */}
+            <div className="mb-10">
+              <Button 
+                className="w-full bg-[#008170] hover:bg-[#00a18f] text-white py-6 text-lg rounded-md flex items-center justify-center space-x-2"
+                onClick={() => setIsAddDepartmentOpen(true)}
+              >
+                <Plus size={20} />
+                <span>Add Department</span>
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
-
-      <h1 className="text-[30px] font-bold text-green-900 dark:text-emerald-400">
-        Admin Dashboard
-      </h1>
-
-      <Button className="w-full h-[50px] flex gap-4 !bg-emerald-700 font-bold !text-white" onClick={() => setShowDepartmentModal(true)}>
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
-          <LuPlus className="text-emerald-700" />
-        </div>
-        Add Department
-      </Button>
-
-      <div className="w-full">
-        <h2 className="text-center text-xl font-bold dark:text-white">Departments</h2>
-        <div className="flex flex-wrap justify-center gap-5" ref={parent}>
-          {isLoading.fetch ? (
-            Array.from({ length: 4 }).map((_, index) => (
-              <p key={index} className="h-20 w-full sm:w-[45%] flex items-center justify-center rounded-md bg-slate-200 animate-pulse">
-                <ImSpinner6 className="h-8 w-8 animate-spin text-white" /> Loading
-              </p>
-            ))
-          ) : departments.length > 0 ? (
-            departments.map(({ id, department }) => (
-              <div key={id} className="w-full sm:w-[48%] flex items-center justify-between rounded-md bg-gray-400 p-4 dark:bg-gray-100">
-                <div className="flex items-center gap-2">
-                  <AiFillEye className="text-slate-100 dark:text-gray-500" />
-                  <span className="font-semibold text-white dark:text-gray-700">{department}</span>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger>
-                    <AiFillDelete className="text-red-500" />
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="dark:text-white">
-                        Are you sure you want to delete this department?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. It will permanently delete the department.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="dark:text-white">Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteDepartment(id)}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+            
+            {/* Departments Section */}
+            <div>
+              <h2 className="text-2xl font-bold mb-8 text-center text-white">Departments</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {departments.map((department) => (
+                  <Card key={department.id} className="bg-[#f1f3f5] text-gray-800 rounded-md flex justify-between items-center p-4">
+                    <div className="flex items-center">
+                      <div className="flex items-center">
+                        <GraduationCap size={20} className="text-gray-500 mr-3" />
+                        <span className="font-medium">{department.name}</span>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100"
+                      onClick={() => handleDeleteDepartment(department.id)}
+                    >
+                      <Trash2 size={18} />
+                    </Button>
+                  </Card>
+                ))}
               </div>
-            ))
-          ) : (
-            <p className="text-center dark:text-white">No Department Found</p>
-          )}
-        </div>
-      </div>
-
-      {/* Add Department Modal */}
-      <Dialog open={showDepartmentModal} onOpenChange={setShowDepartmentModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-center text-[30px] font-bold dark:text-white">
-              Create Department
-            </DialogTitle>
-          </DialogHeader>
-          <div className="max-w-[320px] mx-auto flex flex-col gap-5">
-            <Form {...DepartmentForm}>
-              <form onSubmit={DepartmentForm.handleSubmit(addDepartment)} className="space-y-4">
-                <FormField
-                  control={DepartmentForm.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem ref={parent}>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl>
-                        <Input className="h-[50px]" placeholder="e.g., BSc Computer Science" {...field} />
-                      </FormControl>
-                      <FormDescription>This is the department students can select.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end gap-2 pb-4">
-                  <Button onClick={() => setShowDepartmentModal(false)} className="!bg-slate-200 !text-emerald-600">Cancel</Button>
-                  <LoadingButton className="bg-emerald-600 !text-white hover:bg-emerald-700" loading={isLoading.submit} type="submit">
-                    Submit
-                  </LoadingButton>
-                </div>
-              </form>
-            </Form>
+            </div>
+          </>
+        )}
+        
+        {activeTab === "users" && (
+          <div className="bg-[#102336] rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-4 text-white">Users Management</h2>
+            <p className="text-gray-300">User management interface would go here.</p>
           </div>
+        )}
+        
+        {activeTab === "students" && (
+          <div className="bg-[#102336] rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-4 text-white">Students Management</h2>
+            <p className="text-gray-300">Student management interface would go here.</p>
+          </div>
+        )}
+        
+        {activeTab === "requests" && (
+          <div className="bg-[#102336] rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-4 text-white">Account Requests</h2>
+            <p className="text-gray-300">Account request approval interface would go here.</p>
+          </div>
+        )}
+      </main>
+      
+      {/* Add Department Dialog */}
+      <Dialog open={isAddDepartmentOpen} onOpenChange={setIsAddDepartmentOpen}>
+        <DialogContent className="bg-[#102336] text-white border-[#1e3450]">
+          <DialogHeader>
+            <DialogTitle className="text-[#00E5B7]">Add New Department</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Enter the name of the department you want to add.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="department-name" className="text-white">Department Name</Label>
+            <Input
+              id="department-name"
+              value={newDepartment}
+              onChange={(e) => setNewDepartment(e.target.value)}
+              placeholder="e.g. Computer Science"
+              className="bg-[#0c1221] border-[#1e3450] text-white mt-2"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddDepartmentOpen(false)}
+              className="border-[#1e3450] text-gray-300 hover:bg-[#1e3450]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddDepartment}
+              className="bg-[#008170] hover:bg-[#00a18f] text-white"
+            >
+              Add Department
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;
