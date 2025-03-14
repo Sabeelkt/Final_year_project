@@ -17,7 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-// import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,52 +29,37 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-// import {
-//   InputOTP,
-//   InputOTPGroup,
-//   InputOTPSlot,
-// } from "@/components/ui/input-otp";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Stepper from "@/components/Stepper";
-// import ErrorImg from "@/assets/error.svg";
-// import SuccessImg from "@/assets/succes.svg";
 import { LoadingButton } from "@/components/ui/loading-button";
-
-const FormSchemacode = z.object({
-  code: z.string().min(6, {
-    message: "Your one-time password must be 6 characters.",
-  }),
-});
 
 const Register = () => {
   const [showDialog, setShowDialog] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [Submitloading, setSubmitLoading] = useState(false);
-  const [SubmitCodeLoading, setSubmitCodeLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [done, setDone] = useState(false);
-  // const { toast } = useToast();
   const [parent] = useAutoAnimate({});
-  const [AccReq, setAccReq] = useState(false);
-  const APIURL = import.meta.env.VITE_API_URL;
+  const [accReq, setAccReq] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [apiError, setApiError] = useState(null);
   const steps = ["Step 1", "Step 2"];
-  const [codeSent, setCodeSented] = useState(false);
-  const [emailid, setEmailid] = useState("");
+  const [emailId, setEmailId] = useState("");
 
+  // Define the form schema based on whether it's an account request
   const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
     subject: z.string().nonempty({ message: "Subject is required" }),
     message: z.string().nonempty({ message: "Message is required" }),
-    team_name: AccReq
+    team_name: accReq
       ? z
           .string()
           .nonempty({ message: "Team Name is required" })
           .min(3, { message: "Team Name must be at least 3 characters" })
       : z.string().optional(),
-    password: AccReq
+    password: accReq
       ? z.string().min(6, { message: "Password must be at least 6 characters" })
       : z.string().optional(),
-    Nodal_Officer: AccReq
+    Nodal_Officer: accReq
       ? z.string().nonempty({ message: "Head name required" })
       : z.string().optional(),
     phone_number: z
@@ -92,42 +76,8 @@ const Register = () => {
       .optional(),
   });
 
-  // const formcode = useForm({
-  //   resolver: zodResolver(FormSchemacode),
-  //   defaultValues: {
-  //     code: "",
-  //   },
-  // });
-  // //  Handle the Verify Code form submission
-  // function onSubmitCode(data) {
-  //   setSubmitCodeLoading(true);
-  //   try {
-  //     // toast({
-  //     //     title: "You submitted the following values:",
-  //     //     description: (
-  //     //         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-  //     //             <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-  //     //         </pre>
-  //     //     ),
-  //     // })
-  //     // if (data.code) {
-  //     //   handleVerifyCode(data.code);
-  //     // }
-  //   } catch (error) {
-  //     setSubmitCodeLoading(false);
-  //     // toast({
-  //     //   variant: "destructive",
-  //     //   title: "Message Not Sent",
-  //     //   description: "Your message could not be sent. Please try again later",
-  //     //   duration: 2000,
-  //     // });
-  //     alert('Your message could not be sent. Please try again later')
-  //     console.error(error);
-  //   }
-  // }
-
   const form = useForm({
-    // resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema), // Enable the resolver for validation
     defaultValues: {
       email: "",
       subject: "",
@@ -139,81 +89,38 @@ const Register = () => {
       contact_number: "",
     },
   });
+
   // Handle the form submission
   async function onSubmit(values) {
-    setLoading(true);
     setSubmitLoading(true);
-    // console.log(values);
+    setApiError(null);
+    
     try {
       if (values.subject === "Account Request") {
-        handleAccountRequest(values);
+        await handleAccountRequest(values);
       } else {
-        handleContact(values);
+        await handleContact(values);
       }
     } catch (error) {
       setDone(false);
-      // toast({
-      //   variant: "destructive",
-      //   title: "Message Not Sent",
-      //   description: "Your message could not be sent. Please try again later",
-      //   duration: 2000,
-      // });
-      alert('Your message could not be sent. Please try again later')
-      setSubmitLoading(false);
+      setApiError("Your message could not be sent. Please try again later");
       console.error(error);
+    } finally {
+      setSubmitLoading(false);
     }
   }
 
-  //  Call the API to send the verification email
+  // Call the API to send the account request
   const handleAccountRequest = async (values) => {
     try {
-      if (
-        values.email === "" ||
-        values.subject === "" ||
-        values.message === "" ||
-        values.team_name === "" ||
-        values.password === "" ||
-        values.Nodal_Officer === ""
-      ) {
-        // toast({
-        //   variant: "destructive",
-        //   title: "Message Not Sent",
-        //   description: "Please fill all the required fields",
-        //   duration: 2000,
-        // });
-        alert('Please fill all the required fields')
-        setSubmitLoading(false);
-        return;
-      } else if (
-        values.phone_number === "" ||
-        values.phone_number?.length !== 10 ||
-        Number.isNaN(Number(values.phone_number))
-      ) {
-        // toast({
-        //   variant: "destructive",
-        //   title: "Message Not Sent",
-        //   description: "Please enter a valid phone number",
-        // });
-        alert('Please enter a valid phone number')
-        setSubmitLoading(false);
-        return;
-      } else if (
-        values.contact_number &&
-        values.contact_number?.length !== 10
-      ) {
-        // toast({
-        //   variant: "destructive",
-        //   title: "Message Not Sent",
-        //   description: "Please enter a valid contact number",
-        // });
-        setSubmitLoading(false);
-        return;
-      } else {
-        setShowDialog(true);
-      }
-      // console.log(values);
-      setEmailid(values.email);
-      // Send verification email if it's an account request
+      // Show the loading dialog
+      setLoading(true);
+      setShowDialog(true);
+      
+      // Store the email for potential future use
+      setEmailId(values.email);
+      
+      // Make the API call
       const response = await fetch(`http://localhost:5000/api/auth/verify`, {
         method: "POST",
         headers: {
@@ -221,203 +128,85 @@ const Register = () => {
         },
         body: JSON.stringify({
           ...values,
-          Verification: "pending",
+          status: "pending", // Match the schema from your API documentation
           createdAt: new Date().toISOString(),
         }),
       });
 
       const data = await response.json();
-      if (data) {
-        // console.log(data);
-      }
-
+      
       if (response.ok) {
+        setDone(true);
         setLoading(false);
-        setSubmitLoading(false);
-        setCodeSented(true);
-        // toast({
-        //   variant: "success",
-        //   title: "Verification Email Sent",
-        //   description:
-        //     "A verification code has been sent to your email. Please check your email and verify your account.",
-        //   duration: 2000,
-        // });
-        alert('A verification code has been sent to your email. Please check your email and verify your account.')
+        alert('Your account request has been sent successfully');
+        form.reset();
       } else {
+        setDone(false);
         setLoading(false);
-        setSubmitLoading(false);
-        // toast({
-        //   variant: "destructive",
-        //   title: "Account Request Not Sent",
-        //   description:
-        //     "Your account request could not be sent. Please try again later",
-        //   duration: 2000,
-        // });
+        setApiError(data.message || "Account request failed. Please try again later.");
       }
     } catch (error) {
       setDone(false);
       setLoading(false);
-      setSubmitLoading(false);
+      setApiError("An error occurred while processing your request");
       console.error(error);
     }
   };
-  //  Call the API to verify the code
-  // const handleVerifyCode = async (code) => {
-  //   try {
-  //     if (code === "") {
-  //       toast({
-  //         variant: "destructive",
-  //         title: "Message Not Sent",
-  //         description: "Please fill all the required fields",
-  //         duration: 2000,
-  //       });
-  //       setSubmitCodeLoading(false);
-  //       return;
-  //     } else if (emailid === "") {
-  //       toast({
-  //         variant: "destructive",
-  //         title: "Message Not Sent",
-  //         description: "Please fill all the required fields",
-  //         duration: 2000,
-  //       });
-  //       setSubmitCodeLoading(false);
-  //       return;
-  //     }
-  //     const result = await fetch(`${APIURL}/auth/verify-code`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         verificationCode: code,
-  //         email: emailid,
-  //       }),
-  //     });
-  //     const data = await result.json();
-  //     if (data) {
-  //       // console.log(data);
-  //     }
-  //     if (result.ok) {
-  //       setSubmitCodeLoading(false);
-  //       setDone(true);
-  //       toast({
-  //         variant: "success",
-  //         title: "Account Request Sented",
-  //         description:
-  //           "Your account request has been sent successfully. Please wait for the admin to verify your account.",
-  //         duration: 2000,
-  //       });
-  //       setDone(false);
-  //       setCodeSented(false);
-  //       setTimeout(() => {
-  //         handleDialogClose();
-  //       }, 5000);
-  //     } else {
-  //       setSubmitCodeLoading(false);
-  //       toast({
-  //         variant: "destructive",
-  //         title: "The code is invalid",
-  //         description: "Please enter the correct code sent to your email.",
-  //         duration: 2000,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     setSubmitCodeLoading(false);
-  //     console.error(error);
-  //   }
-  // };
 
-  // Call the API to send the contact message
+  // Call the API to send a contact message
   const handleContact = async (values) => {
     try {
-      if (
-        values.email === "" ||
-        values.subject === "" ||
-        values.message === ""
-      ) {
-        // toast({
-        //   variant: "destructive",
-        //   title: "Message Not Sent",
-        //   description: "Please fill all the required fields",
-        //   duration: 2000,
-        // });
-        alert('Please fill all the required fields')
-        setSubmitLoading(false);
-
-        return;
-      }
+      setLoading(true);
       setShowDialog(true);
-      const response = await fetch(`${APIURL}/contact`, {
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
       });
+      
       if (response.ok) {
-        setSubmitLoading(false);
-
-        setLoading(false);
         setDone(true);
-        // toast({
-        //   variant: "success",
-        //   title: "Message Sent",
-        //   description: "Your message has been sent successfully",
-        //   duration: 2000,
-        // });
-        alert('Your message has been sent successfully')
+        setLoading(false);
+        alert('Your message has been sent successfully');
         form.reset();
       } else {
-        setSubmitLoading(false);
-
-        setLoading(false);
         setDone(false);
-        // toast({
-        //   variant: "destructive",
-        //   title: "Message Not Sent",
-        //   description: "Your message could not be sent. Please try again later",
-        //   duration: 2000,
-        // });
+        setLoading(false);
+        const data = await response.json();
+        setApiError(data.message || "Message not sent. Please try again later.");
       }
-      form.reset();
     } catch (error) {
-      setSubmitLoading(false);
-
+      setDone(false);
       setLoading(false);
-      // toast({
-      //   variant: "destructive",
-      //   title: "Message Not Sent",
-      //   description: "Your message could not be sent. Please try again later",
-      //   duration: 2000,
-      // });
+      setApiError("An error occurred while sending your message");
       console.error(error);
     }
   };
 
   const Subjects = [
-    // "Issue Facing",
-    // "Bug detected",
-    // "Feature Request",
-    // "Feedback",
-    // "Suggestion",
     "Account Request",
-    // "Other",
+    // Add other subject options if needed
   ];
+
   // Handle the dialog close
   const handleDialogClose = () => {
     form.setValue("subject", "");
     setCurrentStep(0);
     form.reset();
-    // formcode.reset();
     setDone(false);
-    setCodeSented(false);
-    setLoading(true);
+    setLoading(false);
     setShowDialog(false);
+    setApiError(null);
   };
+
   const handleClear = () => {
     form.reset();
   };
 
+  // Update the accReq state when the subject changes
   useEffect(() => {
     if (form.watch("subject") === "Account Request") {
       setAccReq(true);
@@ -426,20 +215,16 @@ const Register = () => {
     }
   }, [form.watch("subject")]);
 
+  // Handle next button click in stepper
   const handleNextButton = () => {
-    if (
-      form.watch("email") === "" ||
-      form.watch("subject") === "" ||
-      form.watch("message") === ""
-    ) {
-      toast({
-        variant: "destructive",
-        title: "Cannot Proceed",
-        description: "Please fill all the required fields",
-        duration: 2000,
-      });
+    const { email, subject, message } = form.getValues();
+    
+    // Simple validation before proceeding
+    if (!email || !subject || !message) {
+      alert('Please fill all the required fields');
       return;
     }
+    
     setCurrentStep(currentStep + 1);
   };
 
@@ -457,7 +242,7 @@ const Register = () => {
         className="mt-4 flex min-h-fit w-full max-w-[360px] flex-col gap-5"
         ref={parent}
       >
-        {AccReq && <Stepper steps={steps} currentStep={currentStep} />}
+        {accReq && <Stepper steps={steps} currentStep={currentStep} />}
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -477,13 +262,10 @@ const Register = () => {
                       <FormControl>
                         <Input
                           className="h-[50px]"
-                          placeholder="Email "
+                          placeholder="Email"
                           {...field}
                         />
                       </FormControl>
-                      {/* <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -513,9 +295,6 @@ const Register = () => {
                           </SelectContent>
                         </Select>
                       </FormControl>
-                      {/* <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -535,14 +314,11 @@ const Register = () => {
                           {...field}
                         />
                       </FormControl>
-                      {/* <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {AccReq && AccReq ? (
+                {accReq ? (
                   <div className="flex items-center justify-end gap-2">
                     <Button
                       type="button"
@@ -557,13 +333,14 @@ const Register = () => {
                     <Button
                       className="mt-6 min-w-[120px] !bg-slate-200 font-bold !text-emerald-600"
                       onClick={handleClear}
+                      type="button"
                     >
                       Clear
                     </Button>
                     <LoadingButton
                       type="submit"
                       className="mt-6 min-w-[120px] bg-emerald-600 font-bold !text-white transition-all ease-in-out hover:bg-emerald-700"
-                      loading={Submitloading}
+                      loading={submitLoading}
                     >
                       Submit
                     </LoadingButton>
@@ -573,7 +350,7 @@ const Register = () => {
             )}
             {currentStep > 0 && (
               <>
-                {AccReq && (
+                {accReq && (
                   <>
                     <FormField
                       control={form.control}
@@ -586,7 +363,7 @@ const Register = () => {
                           <FormControl>
                             <Input
                               className="h-[50px]"
-                              placeholder="Team Name "
+                              placeholder="Team Name"
                               {...field}
                             />
                           </FormControl>
@@ -605,7 +382,7 @@ const Register = () => {
                           <FormControl>
                             <Input
                               className="h-[50px]"
-                              placeholder="Nodal Officer "
+                              placeholder="Nodal Officer"
                               {...field}
                             />
                           </FormControl>
@@ -624,7 +401,7 @@ const Register = () => {
                           <FormControl>
                             <Input
                               className="h-[50px]"
-                              placeholder="Phone Number "
+                              placeholder="Phone Number"
                               {...field}
                             />
                           </FormControl>
@@ -661,7 +438,7 @@ const Register = () => {
                           <FormControl>
                             <Input
                               className="h-[50px]"
-                              placeholder="Password "
+                              placeholder="Password"
                               type="password"
                               {...field}
                             />
@@ -684,7 +461,7 @@ const Register = () => {
                   <LoadingButton
                     type="submit"
                     className="min-w-[120px] bg-emerald-600 px-4 py-2 font-bold !text-white transition-all ease-in-out hover:bg-emerald-700"
-                    loading={Submitloading}
+                    loading={submitLoading}
                   >
                     Submit
                   </LoadingButton>
@@ -697,122 +474,52 @@ const Register = () => {
 
       <Dialog open={showDialog} onOpenChange={handleDialogClose}>
         <DialogContent className="min-h-[300px]">
-          {loading && loading ? (
+          {loading ? (
             <DialogHeader>
               <DialogTitle className="text-center dark:text-white">
                 Loading...
               </DialogTitle>
               <DialogDescription className="text-center dark:text-white">
-                Sending your message...
+                Sending your request...
               </DialogDescription>
             </DialogHeader>
           ) : (
             <>
-              {/* {codeSent && codeSent ? (
-                <div className="flex flex-col items-center justify-center">
-                  <DialogHeader>
-                    <DialogTitle className="my-2 text-center text-xl dark:text-white">
-                      Verify Your Account
-                    </DialogTitle>
-                    <DialogDescription>
-                      A verification code has been sent to your email. Please
-                      check your email and verify your account.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...formcode}>
-                    <form
-                      onSubmit={formcode.handleSubmit(onSubmitCode)}
-                      className="my-4 flex w-2/3 flex-col items-center justify-center space-y-6"
+              {done ? (
+                <DialogHeader>
+                  <DialogTitle className="text-center">
+                    Success
+                  </DialogTitle>
+                  <DialogDescription className="text-center">
+                    Submitted Successfully
+                  </DialogDescription>
+                  <DialogFooter>
+                    <Button
+                      onClick={handleDialogClose}
+                      className="mx-auto mt-6 h-[30px] w-fit !bg-emerald-600 px-10 font-bold !text-white"
                     >
-                      <FormField
-                        control={formcode.control}
-                        name="code"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="w-full text-center">
-                              One-Time Password
-                            </FormLabel>
-                            <FormControl className="mx-auto flex">
-                              <InputOTP
-                                maxLength={6}
-                                {...field}
-                                className="mx-auto flex"
-                              >
-                                <InputOTPGroup className="mx-auto flex dark:text-white">
-                                  <InputOTPSlot index={0} />
-                                  <InputOTPSlot index={1} />
-                                  <InputOTPSlot index={2} />
-                                  <InputOTPSlot index={3} />
-                                  <InputOTPSlot index={4} />
-                                  <InputOTPSlot index={5} />
-                                </InputOTPGroup>
-                              </InputOTP>
-                            </FormControl>
-                            <FormDescription>
-                              Please enter the one-time password sent to your
-                              email.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <LoadingButton
-                        type="submit"
-                        className="w-full bg-emerald-600 font-bold !text-white transition-all ease-in-out hover:bg-emerald-700"
-                        loading={SubmitCodeLoading}
-                      >
-                        Verify
-                      </LoadingButton>
-                    </form>
-                  </Form>
-                </div>
-              ) : ( */}
-                <>
-                  {done && done ? (
-                    <DialogHeader>
-                      <DialogTitle>
-                        {/* <img
-                          src={SuccessImg}
-                          alt="delete"
-                          className="mx-auto mt-4 h-36 w-36"
-                        /> */}success
-                      </DialogTitle>
-                      <DialogDescription className="text-center">
-                        Submit Successfully
-                      </DialogDescription>
-                      <DialogFooter>
-                        <Button
-                          onClick={handleDialogClose}
-                          className="mx-auto mt-6 h-[30px] w-fit !bg-emerald-600 px-10 font-bold !text-white"
-                        >
-                          Done
-                        </Button>
-                      </DialogFooter>
-                    </DialogHeader>
-                  ) : (
-                    <DialogHeader>
-                      <DialogTitle>
-                        {/* <img
-                          src={ErrorImg}
-                          alt="delete"
-                          className="mx-auto mt-4 h-36 w-36"
-                        /> */}error
-                      </DialogTitle>
-                      <DialogDescription className="text-center">
-                        Submission failed. Please try again later.
-                      </DialogDescription>
-                      <DialogFooter>
-                        <Button
-                          onClick={handleDialogClose}
-                          className="mx-auto mt-6 h-[30px] w-fit !bg-red-600 px-10 font-bold !text-white"
-                        >
-                          oops!
-                        </Button>
-                      </DialogFooter>
-                    </DialogHeader>
-                  )}
-                </>
-              {/* )} */}
+                      Done
+                    </Button>
+                  </DialogFooter>
+                </DialogHeader>
+              ) : (
+                <DialogHeader>
+                  <DialogTitle className="text-center text-red-600">
+                    Error
+                  </DialogTitle>
+                  <DialogDescription className="text-center">
+                    {apiError || "Submission failed. Please try again later."}
+                  </DialogDescription>
+                  <DialogFooter>
+                    <Button
+                      onClick={handleDialogClose}
+                      className="mx-auto mt-6 h-[30px] w-fit !bg-red-600 px-10 font-bold !text-white"
+                    >
+                      Close
+                    </Button>
+                  </DialogFooter>
+                </DialogHeader>
+              )}
             </>
           )}
         </DialogContent>

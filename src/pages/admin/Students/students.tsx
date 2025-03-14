@@ -57,7 +57,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/config/firebase";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner"
 import { ImSpinner6 } from "react-icons/im";
 
 import {
@@ -132,7 +132,6 @@ function Students() {
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [Department, setDepartment] = useState<string[]>([]);
   const [method, setMethod] = useState<string>("POST");
-  const { toast } = useToast();
   const [parent] = useAutoAnimate();
   const debouncedSearchTerm = useDebounce(searchName, 300);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -167,10 +166,9 @@ function Students() {
     );
     if (alreadyAdded) {
       setSubmitLoading(false);
-      return toast({
-        variant: "destructive",
-        description: "Student admission no already added",
-      });
+      return toast(
+      "Student admission no already added",
+      );
     }
     try {
       const docRef = doc(studentCollectionRef, values.admissionNo);
@@ -189,10 +187,7 @@ function Students() {
       setHandleCreateStudent(false);
       form.reset();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.message,
-      });
+      toast(error.message,);
       setSubmitLoading(false);
     }
   };
@@ -353,10 +348,7 @@ function Students() {
     try {
       await deleteDoc(doc(studentCollectionRef, id));
       // console.log('id', id);
-      toast({
-        variant: "success",
-        description: "Student deleted successfully",
-      });
+      toast( "Student deleted successfully");
       getStudents();
       setDeleteLoading(false);
     } catch (error: any) {
@@ -380,10 +372,7 @@ function Students() {
       // form.setValue('phone', student.phone);
       openModal("PUT");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.message,
-      });
+      toast(error.message);
     }
   };
 
@@ -397,18 +386,12 @@ function Students() {
         ...student,
         updatedAt: Timestamp.now(),
       });
-      toast({
-        variant: "success",
-        description: "Student updated successfully",
-      });
+      toast("Student updated successfully");
       setHandleCreateStudent(false);
       getStudents();
       setSubmitLoading(false);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.message,
-      });
+      toast(error.message);
       setSubmitLoading(false);
     }
   };

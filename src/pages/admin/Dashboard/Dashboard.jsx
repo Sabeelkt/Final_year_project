@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Home, Users, GraduationCap, User, Plus, Trash2 } from "lucide-react";
+import { Home, Users as UsersIcon, GraduationCap, User, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import NavBar from "../../../components/NavBar";
+import AuthRoleRequire from "../../../components/router/AuthRoleRequire";
+import Users from "../Users/users";
+import Students from '../../admin/Students/students'
+
 
 const AdminDashboard = () => {
   const [departments, setDepartments] = useState([]);
@@ -70,6 +74,7 @@ const AdminDashboard = () => {
   };
 
   return (
+    <AuthRoleRequire role={'admin'}>
     <div className="min-h-screen bg-[#0c1221] text-white">
       <NavBar />
       
@@ -93,7 +98,7 @@ const AdminDashboard = () => {
                 activeTab === "users" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
               }`}
             >
-              <Users size={18} />
+              <UsersIcon size={18} />
               <span>Users</span>
             </button>
             
@@ -107,15 +112,7 @@ const AdminDashboard = () => {
               <span>Students</span>
             </button>
             
-            <button
-              onClick={() => setActiveTab("requests")}
-              className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
-                activeTab === "requests" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
-              }`}
-            >
-              <User size={18} />
-              <span>Account Request</span>
-            </button>
+          
           </div>
         </div>
 
@@ -165,7 +162,8 @@ const AdminDashboard = () => {
         {activeTab === "users" && (
           <div className="bg-[#102336] rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-4 text-white">Users Management</h2>
-            <p className="text-gray-300">User management interface would go here.</p>
+            {/* <p className="text-gray-300">User management interface would go here.</p> */}
+            <Users />
           </div>
         )}
         
@@ -173,6 +171,7 @@ const AdminDashboard = () => {
           <div className="bg-[#102336] rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-4 text-white">Students Management</h2>
             <p className="text-gray-300">Student management interface would go here.</p>
+            <Students/>
           </div>
         )}
         
@@ -225,6 +224,7 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AuthRoleRequire>
   );
 };
 

@@ -26,7 +26,7 @@ async function decodeToken(req, res, next) {
         }
         return res.status(401).json({ message: 'Unauthorized - Invalid token' });
     } catch (e) {
-        return res.status(500).json({ message: 'Internal Server Error' });
+        return res.status(500).json({ message: 'Internal Server Error' , error: e.message});
     }
 }
 

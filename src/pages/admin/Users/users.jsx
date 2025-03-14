@@ -20,7 +20,8 @@ import {
 
 import { auth, db } from "@/config/firebase";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner"
+
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -52,33 +53,20 @@ import { MdPerson, MdPersonAddDisabled } from "react-icons/md";
 import { LoadingButton } from "@/components/ui/loading-button";
 
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import useDebounce from "@/lib/debounce";
 
-interface User {
-  id: string;
-  email: string;
-  team_name: string;
-  role: string;
-  Nodal_Officer: string;
-  status?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  events?: string[];
-}
 
-function users() {
+function Users() {
   const [handleCreateUser, setHandleCreateUser] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [Users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(Users);
-  const { toast } = useToast();
-  const UserCollectionRef = collection(db, "users");
-  const [token, setToken] = useState<string>("");
-  const APIURL = import.meta.env.VITE_API_URL;
+  const [Users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState(Users);
+  const UserCollectionRef = collection(db, "Clubs");
+  const [token, setToken] = useState("");
+  const APIURL = import.meta.env.VITE_API_URL_DEV;
   const [parent] = useAutoAnimate();
-  const debouncedSearchTerm = useDebounce(searchName, 300);
+  // const debouncedSearchTerm = useDebounce(searchName, 300);
   const [method, setMethod] = useState("POST");
   const [updateuserId, setUpdateUserId] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -116,7 +104,7 @@ function users() {
     return () => unsubscribe();
   }, []);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -128,7 +116,7 @@ function users() {
     },
   });
 
-  const EditUser = (id: string, user: User) => {
+  const EditUser = (id, user) => {
     setUpdateUserId(id);
     form.setValue("email", user.email);
     form.setValue("team_name", user.team_name);
@@ -136,7 +124,7 @@ function users() {
     openModal("PUT");
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values) {
     setSubmitLoading(true);
     if (method === "POST") {
       CreateUser(values);
@@ -148,7 +136,7 @@ function users() {
     }
   }
 
-  const CreateUser = async (values: z.infer<typeof formSchema>) => {
+  const CreateUser = async (values) => {
     try {
       const data = {
         email: values.email,
@@ -171,34 +159,25 @@ function users() {
       const responseData = await response.json();
       // console.log('responseData', responseData);
       if (response.ok) {
-        toast({
-          variant: "success",
-          description: responseData.message,
-        });
+        toast(responseData.message);
         getUsers();
         setSubmitLoading(false);
         form.reset();
         closeModal();
       } else {
-        toast({
-          variant: "destructive",
-          description: responseData.message,
-        });
+        toast( responseData.message);
         setSubmitLoading(false);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        description: error.message,
-      });
+      toast(error.message);
       closeModal();
       setSubmitLoading(false);
       form.reset();
     }
   };
 
-  const DeleteUser = async (id: string) => {
+  const DeleteUser = async (id) => {
     setDeleteLoading(true);
     try {
       const response = await fetch(`${APIURL}/admin/delete-user/${id}`, {
@@ -223,7 +202,7 @@ function users() {
         });
         setDeleteLoading(false);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
@@ -233,7 +212,7 @@ function users() {
     }
   };
 
-  const DisableUser = async (id: string) => {
+  const DisableUser = async (id) => {
     setEnableDisableText("Disabling User...");
     setEnableDisableLoading(true);
     try {
@@ -259,7 +238,7 @@ function users() {
         });
         setEnableDisableLoading(false);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
@@ -269,7 +248,7 @@ function users() {
     }
   };
 
-  const EnableUser = async (id: string) => {
+  const EnableUser = async (id) => {
     setEnableDisableText("Enabling User...");
     setEnableDisableLoading(true);
     try {
@@ -295,7 +274,7 @@ function users() {
         });
         setEnableDisableLoading(false);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
@@ -305,7 +284,7 @@ function users() {
     }
   };
 
-  const UpdateUser = async (id: string, values: z.infer<typeof formSchema>) => {
+  const UpdateUser = async (id, values) => {
     try {
       const Datas = {
         email: values.email,
@@ -339,7 +318,7 @@ function users() {
         });
         setSubmitLoading(false);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
@@ -361,7 +340,7 @@ function users() {
     { label: "Action", value: "col-action" },
   ];
 
-  const [selectedItems, setSelectedItems] = useState<string[]>([
+  const [selectedItems, setSelectedItems] = useState([
     "col-id",
     "col-name",
     "col-officer",
@@ -369,7 +348,7 @@ function users() {
     "col-action",
   ]);
 
-  const handleItemSelect = (item: { label: string; value: string }) => {
+  const handleItemSelect = (item) => {
     let updatedItems;
     if (selectedItems.includes(item.value)) {
       updatedItems = selectedItems.filter((value) => value !== item.value);
@@ -380,7 +359,7 @@ function users() {
     updateSelectedItems(updatedItems);
   };
 
-  const updateSelectedItems = (selectedItems: string[]) => {
+  const updateSelectedItems = (selectedItems) => {
     const allItems = Fields.map((item) => item.value);
     const unselectedItems = allItems.filter(
       (item) => !selectedItems.includes(item),
@@ -390,7 +369,7 @@ function users() {
     unselectedItems.forEach((item) => {
       const elements = document.querySelectorAll(`.${item}`);
       elements.forEach((element) => {
-        (element as HTMLElement).classList.add("hidden-column");
+        (element).classList.add("hidden-column");
       });
     });
 
@@ -398,7 +377,7 @@ function users() {
     selectedItems.forEach((item) => {
       const elements = document.querySelectorAll(`.${item}`);
       elements.forEach((element) => {
-        (element as HTMLElement).classList.remove("hidden-column");
+        (element).classList.remove("hidden-column");
       });
     });
   };
@@ -409,15 +388,16 @@ function users() {
       const filteredUsers = usersSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as User[];
-      const filteredUserRoleUsers = filteredUsers.filter(
-        (user) => user.role === "user",
-      );
+      })) ;
+      // const filteredUserRoleUsers = filteredUsers.filter(
+      //   (user) => user.role === "user",
+      // );
       // console.log('filteredUserRoleUsers', filteredUserRoleUsers);
-      setUsers(filteredUserRoleUsers);
+      setUsers(filteredUsers);
+      console.log(filteredUsers)
       setLoading(false);
       filterAndSortStudents();
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
     }
   };
@@ -425,7 +405,7 @@ function users() {
   const closeModal = () => {
     setHandleCreateUser(false);
   };
-  const openModal = (method: string) => {
+  const openModal = (method) => {
     setMethod(method);
     if (method === "POST") {
       form.setValue("email", "");
@@ -458,13 +438,38 @@ function users() {
     updateSelectedItems(selectedItems);
   }, []);
 
-  useEffect(() => {
-    filterAndSortStudents();
-  }, [Users, debouncedSearchTerm]);
+  // useEffect(() => {
+  //   filterAndSortStudents();
+  // }, [Users, debouncedSearchTerm]);
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
+  const AcceptUser = async (user) => {
+
+    const Data = {
+      email: user.email,
+      password: user.password,
+      role: 'organizer'
+    }
+    try {
+      const response = await fetch(`${APIURL}/admin/accept`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(Data),
+      });
+
+      const responseData = await response.json();
+      console.log(responseData);
+      getUsers();
+    } catch (error) {
+        console.log(error)
+    }
+  }
 
   return (
     <div className="mx-auto mt-20 flex h-full flex-col items-center justify-start gap-10">
@@ -550,6 +555,7 @@ function users() {
                   <th className="col-name tracking-wider">Name</th>
                   <th className="col-officer tracking-wider">Nodal Officer</th>
                   <th className="col-email tracking-wider">Email</th>
+                  <th className="col-action tracking-wider">Status</th>
                   <th className="col-action tracking-wider">Action</th>
                 </tr>
               </thead>
@@ -563,8 +569,8 @@ function users() {
                       </div>
                     </td>
                   </tr>
-                ) : filteredUsers.length > 0 ? (
-                  filteredUsers.map((user, index) => (
+                ) : Users.length > 0 ? (
+                  Users.map((user, index) => (
                     <tr key={index + 1}>
                       <td className="col-id whitespace-nowrap">{index + 1}</td>
                       <td className="col-name whitespace-nowrap">
@@ -576,7 +582,53 @@ function users() {
                       <td className="col-email whitespace-nowrap">
                         {user.email}
                       </td>
+
+                      <td className="col-email whitespace-nowrap">
+                        {user.status}
+                      </td>
                       <td className="col-action flex h-full w-full items-center justify-center gap-1 whitespace-nowrap">
+                        {user.status === 'verifeid' ? 
+                        (
+                          <>
+                          <p className="text-gray-500">
+                          Accepted 
+                            </p> 
+                          </>
+                        ):(
+                      <AlertDialog>
+                          <AlertDialogTrigger>
+                            <>
+                             <button className="col-action mx-auto cursor-pointer text-green-500 transition-all ease-in-out hover:text-green-600" >
+                                Accept 
+                            </button>
+                            </>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="dark:text-white">
+                              Are you sure to Accept this Club user?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. it will accept & create the
+                                user. so be sure before you
+                                continue.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="dark:text-white">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => AcceptUser(user)}
+                              >
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        )}
+                      </td>
+                      {/* <td className="col-action flex h-full w-full items-center justify-center gap-1 whitespace-nowrap">
                         <AiFillEdit
                           className="col-action mx-auto cursor-pointer text-emerald-700 transition-all ease-in-out hover:text-emerald-600"
                           onClick={() => EditUser(user.id, user)}
@@ -671,7 +723,7 @@ function users() {
                             </AlertDialogContent>
                           </AlertDialog>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 ) : (
@@ -829,4 +881,4 @@ function users() {
   );
 }
 
-export default users;
+export default Users;

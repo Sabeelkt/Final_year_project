@@ -7,7 +7,7 @@ import StudentDashboard from './pages/student/Home';
 import OrganizerDashboard from './pages/organizer/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard/Dashboard';
 import EventDetails from './pages/EventDetails';
-import { AuthProvider } from './context/AuthContext';
+import AuthProvider  from './context/AuthContext';
 import Registeration from './pages/student/Register'
 import PreviousEvent from './pages/student/PreviousEvent'
 import CreateEvent from './pages/organizer/CreateEvent';
@@ -15,6 +15,7 @@ import EventDetail from './pages/organizer/EventDetail';
 import EventReport from './pages/organizer/EventReport';
 import EventRequest from './pages/organizer/EventRequest';
 import AccRegister from './pages/AccRegister';
+
 function App() {
   return (
     <Router>

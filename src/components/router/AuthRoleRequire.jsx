@@ -2,19 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { auth } from '@/config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { useToast } from '../ui/use-toast';
+import { toast } from "sonner"
 import { ImSpinner6 } from "react-icons/im";
 
-interface AuthRoleRequireProps {
-    role: 'admin' | 'user';
-    children: JSX.Element;
-}
 
-const AuthRoleRequire: React.FC<AuthRoleRequireProps> = ({ role, children }) => {
+
+const AuthRoleRequire = ({ role, children }) => {
     const [user, setUser] = useState(auth.currentUser);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const { toast } = useToast();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -26,36 +22,20 @@ const AuthRoleRequire: React.FC<AuthRoleRequireProps> = ({ role, children }) => 
                 // console.log('User role:', idTokenResult.claims.role);
                 if (role === 'user') {
                     if (authRole === 'admin') {
-                        toast({
-                            variant: 'destructive',
-                            title: 'Access denied',
-                            description: 'You dont have permission to access this page',
-                        });
+                        toast('You dont have permission to access this page');
                         navigate('/dashboard')
                     } else if (authRole !== 'user') {
                         await signOut(auth);
-                        toast({
-                            variant: 'destructive',
-                            title: 'Access denied',
-                            description: 'You need to login to access this page',
-                        });
+                        toast('You need to login to access this page');
                         navigate('/signin');
                     }
                 } else if (role === 'admin') {
                     if (authRole === 'user') {
-                        toast({
-                            variant: 'destructive',
-                            title: 'Access denied',
-                            description: 'You dont have permission to access this page',
-                        });
+                        toast('You dont have permission to access this page');
                         navigate('/')
                     } else if (authRole !== 'admin') {
                         await signOut(auth);
-                        toast({
-                            variant: 'destructive',
-                            title: 'Access denied',
-                            description: 'You need to login as an admin to access this page',
-                        });
+                        toast( 'You need to login as an admin to access this page');
                         navigate('/signin');
                     }
                 }

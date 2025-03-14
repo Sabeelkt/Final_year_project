@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff  } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import calendarIllustration from '../asset/loginlogo.png';
 import {auth} from '@/config/firebase';
@@ -9,8 +9,8 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: 'jane@organizer.com',
-    password: 'organizer456'
+    email: 'admin@gmail.com',
+    password: 'password'
   });
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -22,10 +22,22 @@ function LoginPage() {
     
     try {
       // await login(formData);
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+    const user = userCredential.user;
+         // Fetch ID Token and Decode Custom Claims
+    const idTokenResult = await user.getIdTokenResult();
+    const role = idTokenResult.claims.role || 'student';
+
+    console.log("User Role:", role);
+
+    // Redirect based on role
+    if (role === 'admin') {
+      navigate('/admin');
+    } else if (role === 'organizer') {
       navigate('/organizer');
-      // On successful login, navigate to the dashboard or home page
-      // navigate('/student'); // adjust the route as needed
+    } else {
+      navigate('/student');
+    }
     } catch (error) {
       // Display error message
       setError(error.response?.data?.message || 'Login failed. Please check your credentials.');

@@ -66,3 +66,66 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+
+/* custom table */
+#custom-table {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  background-color: white;
+  color: black;
+}
+
+#custom-table td,
+#custom-table th {
+  padding: 12px 8px;
+}
+
+#custom-table td {
+  border-top: 1px solid #9cb19da3;
+}
+
+#custom-table tr {
+  transition: all 0.3s ease-in-out;
+}
+
+#custom-table tr:nth-child(even) {
+  background-color: #6ee1b73d;
+}
+
+#custom-table tr:nth-child(odd) {
+  background-color: #f2f2f2;
+}
+
+
+#custom-table tr:hover {
+  background-color: #baffc2;
+}
+
+#custom-table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #04aa6d86 !important;
+  color: white;
+}
+
+#custom-table tr:first-child th:first-child {
+  border-top-left-radius: 20px;
+  padding: 15px;
+}
+
+#custom-table tr:first-child th:last-child {
+  border-top-right-radius: 20px;
+}
+
+#custom-table tr:last-child td:first-child {
+  border-bottom-left-radius: 20px;
+  padding-bottom: 15px
+}
+
+#custom-table tr:last-child td:last-child {
+  border-bottom-right-radius: 20px;
+}

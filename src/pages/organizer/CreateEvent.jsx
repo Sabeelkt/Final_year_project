@@ -6,7 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { db } from "@/config/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
+import { useAuth } from "../../context/AuthContext";
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,8 @@ export default function CreateEvent() {
     participantLimit: "",
     poster: null,
   });
-
+  const user = useAuth()
+  console.log(user)
   // Handle File Upload
   const handleFileChange = (e) => {
     const file = e.target.files[0];
