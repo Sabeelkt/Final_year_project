@@ -1,4 +1,4 @@
 
 node_modules
-secret_key.json
+secret.json
 .env
