@@ -27,7 +27,7 @@ const AuthRoleRequire = ({ role, children }) => {
                     } else if (authRole !== 'user') {
                         await signOut(auth);
                         toast('You need to login to access this page');
-                        navigate('/signin');
+                        navigate('/login');
                     }
                 } else if (role === 'admin') {
                     if (authRole === 'user') {
@@ -36,12 +36,12 @@ const AuthRoleRequire = ({ role, children }) => {
                     } else if (authRole !== 'admin') {
                         await signOut(auth);
                         toast( 'You need to login as an admin to access this page');
-                        navigate('/signin');
+                        navigate('/login');
                     }
                 }
             } else {
                 await signOut(auth);
-                navigate('/signin');
+                navigate('/login');
             }
         });
 

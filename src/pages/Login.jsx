@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff  } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -9,16 +9,31 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: 'admin@gmail.com',
+    email: '',
     password: 'password'
   });
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { user , role } = useAuth();
+  // console.log(user)
   const navigate = useNavigate();
+
+  useEffect(()=>{
+    if (user) {
+      if (role === 'admin'){
+        navigate('/admin')
+      } else if (role === 'organizer'){
+        navigate('/organizer')
+      } else if (role === 'student'){
+        navigate('/student')
+      }
+    }
+  },[user,role])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+
     
     try {
       // await login(formData);

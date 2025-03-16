@@ -32,6 +32,7 @@ import {
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Stepper from "@/components/Stepper";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -75,6 +76,7 @@ const Register = () => {
       })
       .optional(),
   });
+  const navigate = useNavigate();
 
   const form = useForm({
     resolver: zodResolver(formSchema), // Enable the resolver for validation
@@ -89,6 +91,8 @@ const Register = () => {
       contact_number: "",
     },
   });
+
+
 
   // Handle the form submission
   async function onSubmit(values) {
@@ -203,7 +207,11 @@ const Register = () => {
   };
 
   const handleClear = () => {
+    
     form.reset();
+    navigate(-1)
+    
+    
   };
 
   // Update the accReq state when the subject changes
@@ -335,7 +343,7 @@ const Register = () => {
                       onClick={handleClear}
                       type="button"
                     >
-                      Clear
+                      Cancel
                     </Button>
                     <LoadingButton
                       type="submit"
@@ -358,7 +366,7 @@ const Register = () => {
                       render={({ field }) => (
                         <FormItem ref={parent}>
                           <FormLabel className="after:ml-1 after:text-red-500 after:content-['*']">
-                            Team Name
+                            Club or Department Name
                           </FormLabel>
                           <FormControl>
                             <Input

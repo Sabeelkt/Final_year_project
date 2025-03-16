@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Menu, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { signOut } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -9,9 +11,8 @@ const NavBar = () => {
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated');
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await signOut(auth)
     toast.success('Logged out successfully');
     navigate('/login');
   };

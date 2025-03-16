@@ -55,8 +55,10 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  query,
+   where 
+  
 } from "firebase/firestore";
-import { db } from "@/config/firebase";
 import { toast } from "sonner"
 import { ImSpinner6 } from "react-icons/im";
 
@@ -75,6 +77,8 @@ import getStudentYear from "@/lib/Year";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import useDebounce from "@/lib/debounce";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth,db} from "@/config/firebase";
 
 const formSchema = z.object({
   name: z.string().nonempty({ message: "Name is required" }),
@@ -87,7 +91,7 @@ const formSchema = z.object({
     .length(4, { message: "Year must be 4 digits" }),
   section: z.string().nonempty({ message: "Section is required" }),
   id: z.string().optional(),
-  // email: z.string().email({ message: "Invalid email" }).optional(),
+  email: z.string().email({ message: "Invalid email" }).optional(),
   // phone: z.string()
   //   .refine((val) => val.length === 10, { message: "Phone number must be 10 digits" })
   //   .optional(),
@@ -126,9 +130,9 @@ function Students() {
   const [searchName, setSearchName] = useState("");
   const [sortBox, setSortBox] = useState(false);
   const departmentCollectionRef = collection(db, "departments");
-  const studentCollectionRef = collection(db, "students");
+  const studentCollectionRef = collection(db, "users");
   const [loading, setLoading] = useState(true);
-  const [students, setStudnets] = useState<Student[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [Department, setDepartment] = useState<string[]>([]);
   const [method, setMethod] = useState<string>("POST");
@@ -136,17 +140,32 @@ function Students() {
   const debouncedSearchTerm = useDebounce(searchName, 300);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [DeleteLoading, setDeleteLoading] = useState(false);
+  const APIURL = import.meta.env.VITE_API_URL_DEV;
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        user.getIdToken().then((idToken) => {
+          setToken(idToken);
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      email:"",
       name: "",
       admissionNo: "",
       rollNo: "",
       section: "",
       department: "",
       joinedYear: "",
-      id: "",
+      // id: "",
       // email: "",
       // phone: "",
     },
@@ -154,7 +173,32 @@ function Students() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setSubmitLoading(true);
-    method === "POST" ? createStudent(values) : updateStudent(values);
+    // method === "POST" ? createStudent(values) : updateStudent(values);
+    // createStudent(values)
+    try {
+       const response = await fetch(`${APIURL}/admin/createStudent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...values,
+          createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        active: true,
+        }),
+      });
+
+      const responseData = await response.json();
+      console.log(responseData);
+      toast("Student added successfully");
+      getStudents();
+      setSubmitLoading(false);
+      setHandleCreateStudent(false);
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const createStudent = async (values: StudentForm) => {
@@ -178,10 +222,7 @@ function Students() {
         updatedAt: Timestamp.now(),
         active: true,
       });
-      toast({
-        variant: "success",
-        description: "Student added successfully",
-      });
+      toast("Student added successfully");
       getStudents();
       setSubmitLoading(false);
       setHandleCreateStudent(false);
@@ -263,9 +304,18 @@ function Students() {
       const departments = departmentSnapshot.docs.map((doc) => {
         const data = doc.data();
         return data.department;
-      });
-      // departments.sort((a, b) => a.department.localeCompare(b.department));
-      setDepartment(departments);
+      }); 
+      const initialDepartments: string[] = [
+        "B com Co operation",
+        "BA English",
+        "BA History",
+        "BA West Asia",
+        "Bcom Co operation",
+        "Bsc Biotechnology" // Fix spelling error from "Biotechnolog"
+      ];
+      
+      setDepartment(initialDepartments);
+      
     } catch (error: any) {
       console.error(error);
     }
@@ -273,17 +323,22 @@ function Students() {
 
   const getStudents = async () => {
     try {
-      const usersSnapshot = await getDocs(studentCollectionRef);
+      const studentCollectionRef = collection(db, "users"); // Assuming students are stored in "users"
+  
+      // ✅ Query to filter where role = "student"
+      const q = query(studentCollectionRef, where("role", "==", "student"));
+  
+      const usersSnapshot = await getDocs(q);
       const filteredUsers = usersSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Student[];
-      setStudnets(filteredUsers);
+  
+      setStudents(filteredUsers);
       setFilteredStudents(filteredUsers);
       setLoading(false);
-      // filterAndSortStudents();
     } catch (error: any) {
-      console.error(error);
+      console.error("Error fetching students:", error);
     }
   };
 
@@ -352,10 +407,7 @@ function Students() {
       getStudents();
       setDeleteLoading(false);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.message,
-      });
+      toast(error.message);
       setDeleteLoading(false);
     }
   };
@@ -397,7 +449,7 @@ function Students() {
   };
 
   return (
-    <div className="mx-auto mt-20 flex h-full flex-col items-center justify-start gap-10">
+    <div className="mx-auto mt-20 flex h-full flex-col items-center justify-start gap-10 ">
       {DeleteLoading && (
         <div className="fixed left-0 top-0 z-50 flex h-full w-full items-center justify-center bg-black/50">
           <div className="flex flex-col gap-4 rounded-lg bg-white p-4 shadow-md">
@@ -635,6 +687,26 @@ function Students() {
                         </FormItem>
                       )}
                     />
+                      <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem ref={parent}>
+                          <FormLabel>Student Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              className="h-[50px]"
+                              placeholder="eg: email@gmail.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          {/* <FormDescription>
+                                        This is your public display name.
+                                    </FormDescription> */}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="admissionNo"
@@ -674,7 +746,7 @@ function Students() {
                                 <FormControl>
                                   <RadioGroupItem value="UG" />
                                 </FormControl>
-                                <FormLabel className="font-normal text-white">
+                                <FormLabel className="font-normal text-black">
                                   UG
                                 </FormLabel>
                               </FormItem>
@@ -682,7 +754,7 @@ function Students() {
                                 <FormControl>
                                   <RadioGroupItem value="PG" />
                                 </FormControl>
-                                <FormLabel className="font-normal text-white">
+                                <FormLabel className="font-normal text-black">
                                   PG
                                 </FormLabel>
                               </FormItem>
