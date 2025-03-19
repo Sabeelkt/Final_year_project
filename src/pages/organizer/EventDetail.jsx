@@ -8,6 +8,7 @@ import {
   addDoc,
   updateDoc,
   arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import {
@@ -19,9 +20,11 @@ import {
   Plus,
   QrCode,
   FlipHorizontal,
+  Trash2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import QrScanner from "react-qr-scanner";
+import { toast } from 'sonner'
 
 export default function EventDetails() {
   const navigate = useNavigate();
@@ -30,6 +33,7 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitloading, setSubmitloading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState(null);
   const [admissionNo, setAdmissionNo] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -49,6 +53,9 @@ export default function EventDetails() {
     department: "",
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  // Confirmation dialog state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
 
   useEffect(() => {
     // Get available cameras when scanning is active
@@ -193,7 +200,7 @@ export default function EventDetails() {
       );
 
       if (!studentData) {
-        alert("Student is not registered for this event.");
+        toast("Student is not registered for this event.");
         return;
       }
 
@@ -201,7 +208,7 @@ export default function EventDetails() {
 
       // Check if student is already marked as attended
       if (attendedStudents.some((student) => student.id === studentId)) {
-        alert("Student already marked as attended!");
+        toast("Student already marked as attended!");
         return;
       }
 
@@ -231,6 +238,46 @@ export default function EventDetails() {
     }
   };
 
+  // Function to show delete confirmation
+  const promptDelete = (student) => {
+    setStudentToDelete(student);
+    setShowDeleteConfirm(true);
+  };
+
+  // Function to handle the actual deletion
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      const studentId = studentToDelete.id;
+      
+      // Update Firestore: Remove student ID from the event's attendedStudents list
+      const eventRef = doc(db, "events", id);
+      await updateDoc(eventRef, {
+        attendedStudents: arrayRemove(studentId),
+      });
+
+      // Update Firestore: Remove event ID from the student's attendedEvents list
+      const userRef = doc(db, "users", studentId);
+      await updateDoc(userRef, {
+        attendedEvents: arrayRemove(id),
+      });
+
+      // Update local state to reflect UI changes
+      setAttendedStudents(attendedStudents.filter(student => student.id !== studentId));
+
+      alert("Student removed from attendance successfully!");
+    } catch (error) {
+      console.error("Error removing student:", error);
+      alert("Failed to remove student");
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteConfirm(false);
+      setStudentToDelete(null);
+    }
+  };
+
   const handleExport = () => {
     if (!attendedStudents) {
       alert("data is empty bro ");
@@ -246,6 +293,13 @@ export default function EventDetails() {
 
   // Filtered students based on search term
   const filteredStudents = registeredStudents?.filter(
+    (student) =>
+      student?.admissionNo.includes(searchTerm) ||
+      student?.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Filtered attended students based on search term
+  const filteredAttendedStudents = attendedStudents?.filter(
     (student) =>
       student?.admissionNo.includes(searchTerm) ||
       student?.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -532,11 +586,12 @@ export default function EventDetails() {
                     <th className="py-2 px-2">Admission No</th>
                     <th className="py-2 px-2">Roll No</th>
                     <th className="py-2 px-2">Department</th>
+                    <th className="py-2 px-2">Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-green-50">
-                  {attendedStudents?.length > 0 ? (
-                    attendedStudents?.map((student, index) => (
+                  {filteredAttendedStudents?.length > 0 ? (
+                    filteredAttendedStudents?.map((student, index) => (
                       <tr
                         key={index}
                         className="border-t text-center text-gray-700"
@@ -546,11 +601,20 @@ export default function EventDetails() {
                         <td className="py-2 px-2">{student.admissionNo}</td>
                         <td className="py-2 px-2">{student.rollNo}</td>
                         <td className="py-2 px-2">{student.department}</td>
+                        <td className="py-2 px-2">
+                          <button
+                            onClick={() => promptDelete(student)}
+                            className="p-1 text-red-600 rounded hover:bg-red-100 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr className="text-center">
-                      <td colSpan="5" className="py-4 text-gray-500">
+                      <td colSpan="6" className="py-4 text-gray-500">
                         No students found.
                       </td>
                     </tr>
@@ -573,6 +637,34 @@ export default function EventDetails() {
               >
                 Export Data
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to remove <span className="font-semibold">{studentToDelete?.name}</span> from the attendance list?
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md"
+                  disabled={deleteLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteStudent}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md flex items-center gap-1"
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
           </div>
         )}
