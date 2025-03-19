@@ -205,7 +205,7 @@ export default function CreateEvent() {
             {/* Date Picker */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700">
-                Start Date
+                End Date
               </label>
               <DatePicker
                 selected={eventData.enddate}
@@ -227,7 +227,7 @@ export default function CreateEvent() {
             {/* Time Picker */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700">
-                Start Time
+                End Time
               </label>
               <DatePicker
                 selected={eventData.endtime}

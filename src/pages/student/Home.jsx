@@ -73,9 +73,19 @@ const HomePage = () => {
   const [userData, setUserData] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [recentEvents, setRecentEvents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const user = useAuth();
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  const filteredUpcomingEvents = upcomingEvents.filter((event) =>
+  event.title?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+const filteredRecentEvents = recentEvents.filter((event) =>
+  event.title?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,11 +178,13 @@ const HomePage = () => {
       )}
 
       {/* Search Bar */}
-      <div className="mt-4">
+      <div className="mb-4">
         <input
           type="text"
           placeholder="Search events..."
           className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
@@ -217,7 +229,6 @@ const HomePage = () => {
                 eventID={event.id}
                 userID={user.user.uid}
               />
-              
             </SwiperSlide>
           ))}
         </Swiper>
@@ -256,7 +267,7 @@ const HomePage = () => {
   );
 };
 
-// Event Card Component
+
 const EventCard = ({
   image,
   title,
@@ -265,12 +276,35 @@ const EventCard = ({
   startdate,
   enddate,
   venue,
-  isGroup,
   eventID,
   userID,
 }) => {
   const navigate = useNavigate();
+  const [isRegistered, setIsRegistered] = useState(false);
 
+  // ✅ Check if the user is already registered
+  useEffect(() => {
+    const checkRegistration = async () => {
+      if (!userID) return;
+
+      try {
+        const userRef = doc(db, "users", userID);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          if (userData.registeredEvents?.includes(eventID)) {
+            setIsRegistered(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking registration:", error);
+      }
+    };
+
+    checkRegistration();
+  }, [userID, eventID]);
+
+  // ✅ Handle registration
   const handleRegister = async () => {
     if (!userID) {
       alert("Please log in to register.");
@@ -278,21 +312,19 @@ const EventCard = ({
     }
 
     try {
-      // Reference to the event document
       const eventRef = doc(db, "events", eventID);
-      // Reference to the user document
       const userRef = doc(db, "users", userID);
 
-      // Update event document (add user ID to registeredStudents array)
+      // Update Firestore: Add user to event & event to user
       await updateDoc(eventRef, {
         registeredStudents: arrayUnion(userID),
       });
 
-      // Update user document (add event ID to registeredEvents array)
       await updateDoc(userRef, {
         registeredEvents: arrayUnion(eventID),
       });
 
+      setIsRegistered(true); // ✅ Change button to "Registered"
       alert("Successfully registered for the event!");
     } catch (error) {
       console.error("Error registering for event:", error);
@@ -301,7 +333,7 @@ const EventCard = ({
   };
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg max-w-[360px] w-full  flex flex-col items-center justify-center mx-auto">
+    <div className="p-4 bg-white shadow-md rounded-lg max-w-[360px] w-full flex flex-col items-center justify-center mx-auto">
       <img
         src={image}
         alt={title}
@@ -311,23 +343,32 @@ const EventCard = ({
       <h3 className="text-lg font-semibold mt-2">{team}</h3>
       <p className="text-sm text-gray-600">{description}</p>
       <p className="text-sm text-gray-500">
-        <strong>
-          📅 {startdate} - {enddate}
-        </strong>
+        <strong>📅 {startdate} - {enddate}</strong>
       </p>
       <p className="text-sm text-gray-500">
         <strong>📍 Venue:</strong> {venue}
       </p>
 
+      {/* ✅ Register Button */}
       <button
-        onClick={() => handleRegister()}
-        className="mt-3 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition"
+        onClick={handleRegister}
+        className={`mt-3 px-4 py-2 rounded-md transition ${
+          isRegistered
+            ? "bg-gray-400 text-white cursor-not-allowed"
+            : "bg-green-500 text-white hover:bg-green-600"
+        }`}
+        disabled={isRegistered}
       >
-        Register Now
+        {isRegistered ? "Registered" : "Register Now"}
       </button>
     </div>
   );
 };
+
+
+
+
+
 const RegisteredEventCard = ({
   image,
   title,
@@ -340,7 +381,6 @@ const RegisteredEventCard = ({
   userID,
 }) => {
   const navigate = useNavigate();
-
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg">
@@ -370,7 +410,7 @@ const RegisteredEventCard = ({
   );
 };
 
-RegisteredEventCard
+RegisteredEventCard;
 
 // Recent Event Card Component
 const RecentEventCard = ({
@@ -597,7 +637,9 @@ const ProfilePage = () => {
 
           // ✅ Fetch attended events based on IDs
           if (userInfo.attendedEvents && userInfo.attendedEvents.length > 0) {
-            const eventRefs = userInfo.attendedEvents.map((eventID) => doc(db, "events", eventID));
+            const eventRefs = userInfo.attendedEvents.map((eventID) =>
+              doc(db, "events", eventID)
+            );
             const eventSnaps = await Promise.all(eventRefs.map(getDoc));
             const events = eventSnaps
               .filter((snap) => snap.exists())
@@ -628,7 +670,11 @@ const ProfilePage = () => {
       ) : (
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex flex-col items-center mb-4">
-            <img src={profile} alt="Profile" className="w-24 h-24 rounded-full mb-2" />
+            <img
+              src={profile}
+              alt="Profile"
+              className="w-24 h-24 rounded-full mb-2"
+            />
             <h3 className="font-semibold text-lg">{userData.name}</h3>
             <p className="text-sm text-gray-600">{userData.admissionNo}</p>
           </div>
@@ -672,12 +718,15 @@ const ProfilePage = () => {
                   <div key={event.id} className="bg-gray-100 p-2 rounded">
                     <p className="font-medium">{event.title}</p>
                     <p className="text-xs text-gray-600">
-                      {new Date(event.startdate).toLocaleDateString()} • {event.participationType || "Participant"}
+                      {new Date(event.startdate).toLocaleDateString()} •{" "}
+                      {event.participationType || "Participant"}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">No participation history found.</p>
+                <p className="text-sm text-gray-500">
+                  No participation history found.
+                </p>
               )}
             </div>
           </div>
@@ -686,7 +735,6 @@ const ProfilePage = () => {
     </div>
   );
 };
-
 
 // Events List Page
 const EventsPage = () => {
@@ -706,14 +754,14 @@ const EventsPage = () => {
           id: doc.id,
           ...doc.data(),
         }));
-  
+
         const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
         const registeredEventIDs = new Set();
-  
+
         const upcoming = [];
         const past = [];
         let registered = [];
-  
+
         allEvents.forEach((event) => {
           if (user && event.registeredStudents?.includes(user.user.uid)) {
             registered.push(event);
@@ -724,11 +772,13 @@ const EventsPage = () => {
             past.push(event);
           }
         });
-  
+
         // ✅ Remove past events from registered
         registered = registered.filter((event) => event.startdate >= today);
-  
-        setUpcomingEvents(upcoming.filter((event) => !registeredEventIDs.has(event.id))); // ✅ Remove registered events from upcoming
+
+        setUpcomingEvents(
+          upcoming.filter((event) => !registeredEventIDs.has(event.id))
+        ); // ✅ Remove registered events from upcoming
         setPastEvents(past);
         setRegisteredEvents(registered);
       } catch (error) {
@@ -736,10 +786,9 @@ const EventsPage = () => {
       }
       setLoading(false);
     };
-  
+
     fetchData();
   }, [user]);
-  
 
   if (loading) return <p>Loading...</p>;
 

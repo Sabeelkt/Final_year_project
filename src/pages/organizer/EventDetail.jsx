@@ -18,6 +18,7 @@ import {
   Search,
   Plus,
   QrCode,
+  FlipHorizontal,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import QrScanner from "react-qr-scanner";
@@ -28,7 +29,7 @@ export default function EventDetails() {
   const [activeTab, setActiveTab] = useState("details");
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitloading,setSubmitloading] = useState(false);
+  const [submitloading, setSubmitloading] = useState(false);
   const [error, setError] = useState(null);
   const [admissionNo, setAdmissionNo] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -37,6 +38,9 @@ export default function EventDetails() {
   const [attendedStudents, setAttendedStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState(null);
+  // Camera states
+  const [cameras, setCameras] = useState([]);
+  const [selectedCamera, setSelectedCamera] = useState(null);
   // New student form data
   const [newStudent, setNewStudent] = useState({
     name: "",
@@ -45,6 +49,35 @@ export default function EventDetails() {
     department: "",
   });
   const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    // Get available cameras when scanning is active
+    if (isScanning) {
+      const getCameras = async () => {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          setCameras(videoDevices);
+          
+          // If we have cameras and none is selected yet, select the back camera by default
+          if (videoDevices.length > 0 && !selectedCamera) {
+            // Try to find back camera (usually contains "back" or is not the first camera)
+            const backCamera = videoDevices.find(device => 
+              device.label.toLowerCase().includes('back') || 
+              device.label.toLowerCase().includes('rear')
+            );
+            
+            // If we found a likely back camera, use it, otherwise use the last camera (often the back one)
+            setSelectedCamera(backCamera ? backCamera.deviceId : videoDevices[videoDevices.length - 1].deviceId);
+          }
+        } catch (error) {
+          console.error("Error accessing cameras:", error);
+        }
+      };
+      
+      getCameras();
+    }
+  }, [isScanning]);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -138,9 +171,19 @@ export default function EventDetails() {
     console.error("QR Scan Error:", err);
   };
 
+  const toggleCamera = () => {
+    if (cameras.length <= 1) return; // If only one camera, do nothing
+    
+    // Find current camera index
+    const currentIndex = cameras.findIndex(camera => camera.deviceId === selectedCamera);
+    // Select next camera (or first if at the end)
+    const nextIndex = (currentIndex + 1) % cameras.length;
+    setSelectedCamera(cameras[nextIndex].deviceId);
+  };
+
   const handleAddStudent = async (e) => {
     e.preventDefault();
-    setSubmitloading(true)
+    setSubmitloading(true);
     try {
       if (admissionNo.trim() === "") return;
 
@@ -183,8 +226,8 @@ export default function EventDetails() {
     } catch (error) {
       console.error("Error adding student:", error);
       alert("Failed to add student");
-    } finally{
-      setSubmitloading(false)
+    } finally {
+      setSubmitloading(false);
     }
   };
 
@@ -394,15 +437,6 @@ export default function EventDetails() {
         {activeTab === "reports" && (
           <div>
             {/* Header */}
-            {/* <div className="flex justify-between items-center mb-4">
-            <button onClick={() => navigate(-1)} className="mr-2">
-              <ArrowLeft size={20} />
-            </button>
-            <h2 className="text-xl font-semibold">Event Report</h2>
-            <button onClick={() => handleExport()} className="bg-green-600 text-white px-4 py-2 rounded-md">
-              Export
-            </button>
-          </div> */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Attendance List</h2>
             </div>
@@ -454,13 +488,35 @@ export default function EventDetails() {
                   {isScanning ? "Stop" : "Scan"} QR
                 </button>
               </div>
+              
               {isScanning && (
                 <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-600">
+                      {cameras.length > 0 ? `Camera: ${cameras.find(c => c.deviceId === selectedCamera)?.label || 'Unknown'}` : 'Accessing camera...'}
+                    </span>
+                    {cameras.length > 1 && (
+                      <button 
+                        onClick={toggleCamera} 
+                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md flex items-center gap-1 text-sm"
+                      >
+                        <FlipHorizontal size={16} />
+                        Switch Camera
+                      </button>
+                    )}
+                  </div>
+                  
                   <QrScanner
                     delay={300}
                     onError={handleError}
                     onScan={handleScan}
                     style={{ width: "100%" }}
+                    constraints={{
+                      video: {
+                        deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
+                        facingMode: selectedCamera ? undefined : { ideal: "environment" }
+                      }
+                    }}
                   />
                 </div>
               )}

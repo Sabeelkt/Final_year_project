@@ -648,7 +648,7 @@ function Students() {
       </div>
 
       <Dialog open={handleCreateStudent} onOpenChange={closeModal}>
-        <DialogContent>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               <div className="mx-auto my-4 text-center !text-[30px] !font-bold dark:text-white">

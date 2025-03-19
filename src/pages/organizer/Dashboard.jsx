@@ -9,6 +9,7 @@ import { Pencil, Trash2 } from "lucide-react";
 const EventList = () => {
   const [events, setEvents] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
@@ -50,6 +51,16 @@ const EventList = () => {
     }
   };
 
+  // Filter events based on search term
+  const filteredEvents = events.filter((event) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (event.name && event.name.toLowerCase().includes(searchLower)) ||
+      (event.description && event.description.toLowerCase().includes(searchLower)) ||
+      (event.venue && event.venue.toLowerCase().includes(searchLower))
+    );
+  });
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       {/* Header */}
@@ -63,7 +74,13 @@ const EventList = () => {
       {/* Search Bar */}
       <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
         <FiSearch className="text-gray-400 ml-2" />
-        <input type="text" placeholder="Search events..." className="flex-grow p-2 outline-none" />
+        <input 
+          type="text" 
+          placeholder="Search events..." 
+          className="flex-grow p-2 outline-none"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
         <button className="bg-green-500 text-white p-2 rounded-lg ml-2" onClick={() => navigate("/organizer/create-event")}>
           <FiPlus />
         </button>
@@ -71,8 +88,8 @@ const EventList = () => {
 
       {/* Event List */}
       <div className="mt-4 grid gap-4">
-        {events.length > 0 ? (
-          events.map((event) => (
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
             <div key={event.id} className="bg-green-50 p-4 rounded-lg shadow-md flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <div className="flex gap-3 items-center">
@@ -121,7 +138,9 @@ const EventList = () => {
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-600">No events found.</p>
+          <p className="text-center text-gray-600">
+            {searchTerm ? "No matching events found. Try a different search term." : "No events found."}
+          </p>
         )}
       </div>
     </div>
