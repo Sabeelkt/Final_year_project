@@ -357,11 +357,9 @@ function Students() {
     if (searchName !== "") {
       filtered = filtered.filter(
         (student) =>
-          student?.name.toLowerCase().includes(searchName.toLowerCase()) ||
-          student?.admissionNo
-            .toLowerCase()
-            .includes(searchName.toLowerCase()) ||
-          student?.department.toLowerCase().includes(searchName.toLowerCase()),
+          student?.name?.toLowerCase().includes(searchName.toLowerCase()) ||
+          student?.admissionNo?.toLowerCase().includes(searchName.toLowerCase()) ||
+          student?.department?.toLowerCase().includes(searchName.toLowerCase()),
       );
     } else {
       filtered = students;
@@ -489,7 +487,7 @@ function Students() {
               />
             </div>
             <div className="flex gap-2">
-              <DropdownMenu open={sortBox} onOpenChange={handleSortBox}>
+              {/* <DropdownMenu open={sortBox} onOpenChange={handleSortBox}>
                 <DropdownMenuTrigger className="border-none outline-none">
                   <div
                     className="flex items-center justify-center gap-2 rounded-lg bg-emerald-700 p-2 px-4 text-white"
@@ -520,14 +518,14 @@ function Students() {
                     Clear
                   </Button>
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu> */}
 
               <DropdownMenu>
-                <DropdownMenuTrigger className="border-none outline-none">
+                {/* <DropdownMenuTrigger className="border-none outline-none">
                   <div className="flex items-center justify-center gap-2 rounded-lg bg-emerald-700 p-2 px-4 text-white">
                     Columns <IoIosArrowDown />
                   </div>
-                </DropdownMenuTrigger>
+                </DropdownMenuTrigger> */}
                 <DropdownMenuContent>
                   {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
                   <DropdownMenuSeparator />

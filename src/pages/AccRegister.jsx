@@ -92,13 +92,11 @@ const Register = () => {
     },
   });
 
-
-
   // Handle the form submission
   async function onSubmit(values) {
     setSubmitLoading(true);
     setApiError(null);
-    
+
     try {
       if (values.subject === "Account Request") {
         await handleAccountRequest(values);
@@ -113,17 +111,16 @@ const Register = () => {
       setSubmitLoading(false);
     }
   }
-
   // Call the API to send the account request
   const handleAccountRequest = async (values) => {
     try {
       // Show the loading dialog
       setLoading(true);
       setShowDialog(true);
-      
+
       // Store the email for potential future use
       setEmailId(values.email);
-      
+
       // Make the API call
       const response = await fetch(`http://localhost:5000/api/auth/verify`, {
         method: "POST",
@@ -132,27 +129,52 @@ const Register = () => {
         },
         body: JSON.stringify({
           ...values,
-          status: "pending", // Match the schema from your API documentation
+          status: "pending",
           createdAt: new Date().toISOString(),
         }),
       });
 
-      const data = await response.json();
-      
+      // First check if the response is OK
       if (response.ok) {
-        setDone(true);
-        setLoading(false);
-        alert('Your account request has been sent successfully');
-        form.reset();
+        try {
+          // Try to parse the JSON
+          const data = await response.json();
+          setDone(true);
+          setLoading(false);
+          alert("Your account request has been sent successfully");
+          form.reset();
+        } catch (jsonError) {
+          // If JSON parsing fails but response was OK, still treat as success
+          setDone(true);
+          setLoading(false);
+          alert("Your account request has been sent successfully");
+          form.reset();
+        }
       } else {
+        // Response not OK
         setDone(false);
         setLoading(false);
-        setApiError(data.message || "Account request failed. Please try again later.");
+
+        try {
+          // Try to parse error response as JSON
+          const errorData = await response.json();
+          setApiError(
+            errorData.message ||
+              "Account request failed. Please try again later."
+          );
+        } catch (jsonError) {
+          // If JSON parsing fails, use status text
+          setApiError(
+            `Request failed with status: ${response.status} - ${response.statusText}`
+          );
+        }
       }
     } catch (error) {
       setDone(false);
       setLoading(false);
-      setApiError("An error occurred while processing your request");
+      setApiError(
+        "An error occurred while processing your request: " + error.message
+      );
       console.error(error);
     }
   };
@@ -162,25 +184,30 @@ const Register = () => {
     try {
       setLoading(true);
       setShowDialog(true);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/contact`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-      
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/contact`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        }
+      );
+
       if (response.ok) {
         setDone(true);
         setLoading(false);
-        alert('Your message has been sent successfully');
+        alert("Your message has been sent successfully");
         form.reset();
       } else {
         setDone(false);
         setLoading(false);
         const data = await response.json();
-        setApiError(data.message || "Message not sent. Please try again later.");
+        setApiError(
+          data.message || "Message not sent. Please try again later."
+        );
       }
     } catch (error) {
       setDone(false);
@@ -207,11 +234,8 @@ const Register = () => {
   };
 
   const handleClear = () => {
-    
     form.reset();
-    navigate(-1)
-    
-    
+    navigate(-1);
   };
 
   // Update the accReq state when the subject changes
@@ -226,13 +250,13 @@ const Register = () => {
   // Handle next button click in stepper
   const handleNextButton = () => {
     const { email, subject, message } = form.getValues();
-    
+
     // Simple validation before proceeding
     if (!email || !subject || !message) {
-      alert('Please fill all the required fields');
+      alert("Please fill all the required fields");
       return;
     }
-    
+
     setCurrentStep(currentStep + 1);
   };
 
@@ -495,9 +519,7 @@ const Register = () => {
             <>
               {done ? (
                 <DialogHeader>
-                  <DialogTitle className="text-center">
-                    Success
-                  </DialogTitle>
+                  <DialogTitle className="text-center">Success</DialogTitle>
                   <DialogDescription className="text-center">
                     Submitted Successfully
                   </DialogDescription>

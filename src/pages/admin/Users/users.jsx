@@ -464,6 +464,7 @@ function Users() {
       });
 
       const responseData = await response.json();
+      alert(responseData.message)
       console.log(responseData);
       getUsers();
     } catch (error) {
@@ -522,29 +523,6 @@ function Users() {
                 onChange={(e) => setSearchName(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="border-none outline-none">
-                  <div className="flex items-center justify-center gap-2 rounded-lg bg-emerald-700 p-2 px-4 text-white">
-                    Columns <IoIosArrowDown />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
-                  <DropdownMenuSeparator />
-                  {Fields.map((item, index) => (
-                    <DropdownMenuCheckboxItem
-                      key={index}
-                      checked={selectedItems.includes(item.value)}
-                      onCheckedChange={() => handleItemSelect(item)}
-                    >
-                      {item.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                  {/* <DropdownMenuItem>Subscription</DropdownMenuItem> */}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           </div>
 
           <div className="overflow-auto rounded-[20px] border border-emerald-700">
@@ -555,6 +533,7 @@ function Users() {
                   <th className="col-name tracking-wider">Name</th>
                   <th className="col-officer tracking-wider">Nodal Officer</th>
                   <th className="col-email tracking-wider">Email</th>
+                  <th className="col-email tracking-wider">Mobilel</th>
                   <th className="col-action tracking-wider">Status</th>
                   <th className="col-action tracking-wider">Action</th>
                 </tr>
@@ -582,6 +561,9 @@ function Users() {
                       <td className="col-email whitespace-nowrap">
                         {user.email}
                       </td>
+                      <td className="col-email whitespace-nowrap">
+                        {user.phone_number}
+                      </td>
 
                       <td className="col-email whitespace-nowrap">
                         {user.status}
@@ -596,13 +578,16 @@ function Users() {
                           </>
                         ):(
                       <AlertDialog>
+                         {user.status !== 'verified' && (
                           <AlertDialogTrigger>
                             <>
                              <button className="col-action mx-auto cursor-pointer text-green-500 transition-all ease-in-out hover:text-green-600" >
-                                Accept 
+                                Accept
                             </button>
                             </>
                           </AlertDialogTrigger>
+                         )}
+
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle className="dark:text-white">

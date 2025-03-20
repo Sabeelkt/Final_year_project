@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const [departments, setDepartments] = useState([]);
   const [isAddDepartmentOpen, setIsAddDepartmentOpen] = useState(false);
   const [newDepartment, setNewDepartment] = useState("");
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("users");
 
   useEffect(() => {
     // Load departments from localStorage
@@ -29,7 +29,10 @@ const AdminDashboard = () => {
         { id: "dept_3", name: "BA History" },
         { id: "dept_4", name: "BA West Asia" },
         { id: "dept_5", name: "Bcom Co operation" },
-        { id: "dept_6", name: "Bsc Biotechnolog" },
+        { id: "dept_6", name: "Bsc Computer Science" },
+        { id: "dept_7", name: "Bsc BioChemistry" },
+        { id: "dept_8", name: "Bsc Double Main" },
+        { id: "dept_9", name: "Bsc Biotechnology" }
       ];
       localStorage.setItem("departments", JSON.stringify(initialDepartments));
       setDepartments(initialDepartments);
@@ -82,7 +85,7 @@ const AdminDashboard = () => {
         {/* Navigation Tabs */}
         <div className="flex justify-center mb-12 mt-8">
           <div className="bg-[#102336] rounded-lg p-1 flex space-x-2">
-            <button
+            {/* <button
               onClick={() => setActiveTab("dashboard")}
               className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
                 activeTab === "dashboard" ? "bg-[#008170] text-white" : "text-gray-300 hover:bg-[#1e3450]"
@@ -91,7 +94,7 @@ const AdminDashboard = () => {
               <Home size={18} />
               <span>Dashboard</span>
             </button>
-            
+             */}
             <button
               onClick={() => setActiveTab("users")}
               className={`flex items-center space-x-2 px-6 py-3.5 rounded-md ${
@@ -99,7 +102,7 @@ const AdminDashboard = () => {
               }`}
             >
               <UsersIcon size={18} />
-              <span>Users</span>
+              <span>Organizers</span>
             </button>
             
             <button
@@ -117,10 +120,11 @@ const AdminDashboard = () => {
         </div>
 
         <h1 className="text-4xl font-bold text-center mb-14 text-[#00E5B7]">Admin Dashboard</h1>
-        
+       
         {activeTab === "dashboard" && (
           <>
             {/* Add Department Button */}
+            {/*
             <div className="mb-10">
               <Button 
                 className="w-full bg-[#008170] hover:bg-[#00a18f] text-white py-6 text-lg rounded-md flex items-center justify-center space-x-2"
@@ -132,7 +136,8 @@ const AdminDashboard = () => {
             </div>
             
             {/* Departments Section */}
-            <div>
+            
+            {/* <div>
               <h2 className="text-2xl font-bold mb-8 text-center text-white">Departments</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -155,7 +160,7 @@ const AdminDashboard = () => {
                   </Card>
                 ))}
               </div>
-            </div>
+            </div> */}
           </>
         )}
         
@@ -180,10 +185,11 @@ const AdminDashboard = () => {
             <h2 className="text-2xl font-bold mb-4 text-white">Account Requests</h2>
             <p className="text-gray-300">Account request approval interface would go here.</p>
           </div>
-        )}
+        )} 
       </main>
       
       {/* Add Department Dialog */}
+      {/*
       <Dialog open={isAddDepartmentOpen} onOpenChange={setIsAddDepartmentOpen}>
         <DialogContent className="bg-[#102336] text-white border-[#1e3450]">
           <DialogHeader>
@@ -222,7 +228,7 @@ const AdminDashboard = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>*/}
     </div>
     </AuthRoleRequire>
   );

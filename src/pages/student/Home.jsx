@@ -169,7 +169,7 @@ const filteredRecentEvents = recentEvents.filter((event) =>
             <p className="text-sm text-gray-500">{userData?.admissionNo}</p>
           </div>
         </div>
-        <FontAwesomeIcon icon={faBell} className="text-gray-500 text-xl" />
+        {/*<FontAwesomeIcon icon={faBell} className="text-gray-500 text-xl" />*/}
       </div>
 
       {/* ID Card Modal */}
@@ -598,12 +598,6 @@ const PreviousEventPage = () => {
           <li>Cash prizes worth ₹25,000</li>
           <li>Mentoring sessions by industry experts</li>
         </ul>
-
-        <h4 className="font-medium mb-2">Your Participation</h4>
-        <div className="bg-green-100 p-3 rounded-lg mb-4">
-          <p className="text-sm">Team: CodeQueens</p>
-          <p className="text-sm">Position: Runner-up</p>
-        </div>
 
         <button
           onClick={() => navigate(-1)}

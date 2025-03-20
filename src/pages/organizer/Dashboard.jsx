@@ -128,12 +128,12 @@ const EventList = () => {
                 >
                   <Trash2 size={20} />
                 </button>
-                <button 
+                {/* <button 
                   className="text-green-600 hover:text-green-800" 
                   onClick={() => navigate(`/organizer/edit-event/${event.id}`)}
                 >
                   <Pencil size={20} />
-                </button>
+                </button> */}
               </div>
             </div>
           ))

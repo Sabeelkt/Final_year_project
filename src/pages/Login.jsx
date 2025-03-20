@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff  } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import calendarIllustration from '../asset/loginlogo.png';
-import {auth} from '@/config/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/config/firebase';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,49 +20,74 @@ function LoginPage() {
     password: 'password'
   });
   const [error, setError] = useState('');
-  const { user , role } = useAuth();
-  // console.log(user)
+  const { user, role } = useAuth();
   const navigate = useNavigate();
+  
+  // Add these state variables for the reset password functionality
+  const [resetForm, setResetForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
-  useEffect(()=>{
+  // Function to handle reset form dialog
+  const handleResetForm = () => {
+    setResetForm(!resetForm);
+    setMessage('');
+  };
+
+  useEffect(() => {
     if (user) {
-      if (role === 'admin'){
+      if (role === 'admin') {
         navigate('/admin')
-      } else if (role === 'organizer'){
+      } else if (role === 'organizer') {
         navigate('/organizer')
-      } else if (role === 'student'){
+      } else if (role === 'student') {
         navigate('/student')
       }
     }
-  },[user,role])
+  }, [user, role, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-
     
     try {
-      // await login(formData);
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-    const user = userCredential.user;
-         // Fetch ID Token and Decode Custom Claims
-    const idTokenResult = await user.getIdTokenResult();
-    const role = idTokenResult.claims.role || 'student';
+      const user = userCredential.user;
+      // Fetch ID Token and Decode Custom Claims
+      const idTokenResult = await user.getIdTokenResult();
+      const role = idTokenResult.claims.role || 'student';
 
-    console.log("User Role:", role);
+      console.log("User Role:", role);
 
-    // Redirect based on role
-    if (role === 'admin') {
-      navigate('/admin');
-    } else if (role === 'organizer') {
-      navigate('/organizer');
-    } else {
-      navigate('/student');
-    }
+      // Redirect based on role
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'organizer') {
+        navigate('/organizer');
+      } else {
+        navigate('/student');
+      }
     } catch (error) {
       // Display error message
-      setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(error.message || 'Login failed. Please check your credentials.');
+    }
+  };
+
+  // Handle reset password form submission
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setLoading(true);
+    
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setMessage("Password reset email sent. Check your inbox.");
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      setMessage(error.message || "Failed to send reset email. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,9 +167,13 @@ function LoginPage() {
           </div>
 
           <div className="text-right mb-6">
-            <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
+            <button 
+              type="button" 
+              onClick={handleResetForm} 
+              className="text-sm text-green-600 hover:underline"
+            >
               Forgot Password?
-            </Link>
+            </button>
           </div>
 
           <button
@@ -154,6 +190,59 @@ function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={resetForm} onOpenChange={handleResetForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-center">Forgot Password</DialogTitle>
+            <DialogDescription className="text-center">
+              Enter your email address to reset your password
+            </DialogDescription>
+          </DialogHeader>
+          
+          {message && (
+            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm text-center">
+              {message}
+            </div>
+          )}
+          
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div>
+              <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                id="resetEmail"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="w-full p-3 bg-green-50 bg-opacity-30 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              {loading ? 'Sending...' : 'Reset Password'}
+            </button>
+            
+            <div className="text-center">
+              <button 
+                type="button" 
+                onClick={handleResetForm}
+                className="text-sm text-green-600 hover:underline"
+              >
+                I remember my password
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
