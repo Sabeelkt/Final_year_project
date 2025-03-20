@@ -248,6 +248,8 @@ const filteredRecentEvents = recentEvents.filter((event) =>
           {recentEvents.map((event) => (
             <RecentEventCard
               key={event.id} // Unique key for React lists
+              id={event.id}
+            
               image={event.posterURL} // You might want to use event.image if available
               title={event.title}
               team={event?.team_name}
@@ -414,6 +416,7 @@ RegisteredEventCard;
 
 // Recent Event Card Component
 const RecentEventCard = ({
+  id,
   image,
   title,
   team,
@@ -427,7 +430,7 @@ const RecentEventCard = ({
   return (
     <div
       className="flex items-center bg-white p-4 rounded-lg shadow-md cursor-pointer"
-      onClick={() => navigate("/student/previous-event")}
+      onClick={() => navigate(`/student/event/${id}`)}
     >
       <img src={image} alt={title} className="w-16 h-16 rounded-lg mr-4" />
       <div>
@@ -660,7 +663,7 @@ const ProfilePage = () => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Profile</h2>
       {loading ? (
-        <div>Loading...</div>
+        <div >Loading...</div>
       ) : (
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex flex-col items-center mb-4">
@@ -854,6 +857,7 @@ const EventsPage = () => {
             pastEvents.map((event) => (
               <RecentEventCard
                 key={event.id}
+                id={event.id}
                 image={event.posterURL}
                 title={event.title}
                 team={event?.team_name}

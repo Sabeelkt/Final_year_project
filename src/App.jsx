@@ -53,7 +53,7 @@ function App() {
           <Route path="/admin/*" element={<AdminDashboard />} />
           <Route path="/event/:id" element={<EventDetails />} />
           <Route path="/student/register" element={<Registeration />} />
-          <Route path="/student/previous-event" element={<PreviousEvent />} />
+          <Route path="/student/event/:id" element={<PreviousEvent />} />
           <Route path="/organizer/*" element={<OrganizerDashboard />} />
           <Route path="/organizer/create-event" element={<CreateEvent />} />
           <Route path="/organizer/events/:id" element={<EventDetail />} />

@@ -296,7 +296,7 @@ export default function CreateEvent() {
           />
 
           {/* Group Event Checkbox */}
-          <label className="inline-flex items-center">
+          {/* <label className="inline-flex items-center">
             <input
               type="checkbox"
               checked={eventData.isGroup}
@@ -308,7 +308,7 @@ export default function CreateEvent() {
             <span className="text-sm font-medium text-gray-700">
               Is this a group event?
             </span>
-          </label>
+          </label> */}
 
           {/* File Upload */}
           <label className="block text-sm font-medium text-gray-700">
